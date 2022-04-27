@@ -1,3 +1,6 @@
+# Audio/Images files to big for Git
+res/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

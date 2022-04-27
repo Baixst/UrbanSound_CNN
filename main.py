@@ -28,7 +28,7 @@ import pandas as pd
 # LOAD DATASET
 train_images, train_labels, test_images, test_labels = pp.GenerateArrays(train_path="E:/Users/Basti/Documents/FirstCNN_Res/train",
                                                                          test_path="E:/Users/Basti/Documents/FirstCNN_Res/test",
-                                                                         csv_file="UrbanSound8K.csv")
+                                                                         csv_file="metadata/UrbanSound8K.csv")
 print("Finished Loading Data")
 
 # NORMALIZE pixel values to be between 0 and 1
