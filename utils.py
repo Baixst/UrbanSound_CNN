@@ -35,7 +35,7 @@ def plot_spectrogram(audioFileName, Y, samplerate, frame_size, hop_size, figure,
     # title = y_axis + "-scale Frequency, Frame Size = " + str(frame_size) + ", Hop Size = " + str(hop_size) + " | " + audioFileName
     # fig.subtitle(title)
 
-    cmap = plt.get_cmap("binary")
+    cmap = plt.get_cmap("gray")
     plt.set_cmap(cmap)
     plt.axis('off')
 

@@ -11,7 +11,8 @@ import PIL
 from PIL import Image
 
 
-def CollectLongFiles(original_path, target_path):
+def CollectLongFiles(original_path, target_path, min_duration):
+    print("Looking for files longer then " + str(min_duration) + "sec")
     file_list = os.listdir(original_path)
     utils.clear_directory(target_path)
 
@@ -30,10 +31,11 @@ def CollectLongFiles(original_path, target_path):
         else:
             durations[duration] = 1
 
-        if duration >= 1:
+        if duration >= min_duration:
             target = target_path + "/" + file
             shutil.copyfile(filepath, target)
 
+    print("copied all long audio files to target directory")
     utils.print_class_distribution(target_path)
     return
 
@@ -80,7 +82,7 @@ def AugementData(audio_array, sample_rate, target_duration):
 
     return audio_array
 
-def CreateSpectrograms(audio_path, img_save_path, FrameSize, HopSize):
+def CreateSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_scale):
     print("generating spectrograms...")
     utils.clear_directory(img_save_path)
     file_list = os.listdir(audio_path)
@@ -105,7 +107,7 @@ def CreateSpectrograms(audio_path, img_save_path, FrameSize, HopSize):
         Y_log_audio = librosa.power_to_db(Y_audio)
 
         utils.plot_spectrogram(audioFileName=file, Y=Y_log_audio, samplerate=sampleRate, frame_size=FrameSize,
-            hop_size=HopSize, y_axis="log", save_image=True, save_path=img_save_path, show_plot=False, figure=fig)
+            hop_size=HopSize, y_axis=freq_scale, save_image=True, save_path=img_save_path, show_plot=False, figure=fig)
 
         images_finished += 1
         print(str(images_finished) + "/" + str(amount_files))

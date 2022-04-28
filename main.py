@@ -12,22 +12,27 @@ import tensorflow as tf
 from tensorflow import keras
 import pandas as pd
 
+# Parameter
+spectrogram_path = "res/img"
+audio_path = "res/audio"
+longaudio_path = "res/longaudio"
+train_img_path = "res/train"
+test_img_path = "res/test"
+
+dft_freq_scale = "log"
+
 # COLLECT FILES LONGER THEN 1 SEC
-# pp.CollectLongFiles(original_path="E:/Users/Basti/Documents/FirstCNN_Res/audio",
-#                    target_path="E:/Users/Basti/Documents/FirstCNN_Res/longaudio")
+# pp.CollectLongFiles(original_path=audio_path, target_path=longaudio_path, min_duration=1)
 
 # CREATE SPECTROGRAMS
-# pp.CreateSpectrograms("E:/Users/Basti/Documents/FirstCNN_Res/longaudio", "E:/Users/Basti/Documents/FirstCNN_Res/img",
-#                       FrameSize=1024, HopSize=256)
+pp.CreateSpectrograms(longaudio_path, spectrogram_path, FrameSize=1024, HopSize=256, freq_scale=dft_freq_scale)
 
 # SPLIT DATA
-# files = splitdata.load_image_names("E:/Users/Basti/Documents/FirstCNN_Res/img")
-# splitdata.split_data_in_two(files, 80, "E:/Users/Basti/Documents/FirstCNN_Res/img",
-#                             "E:/Users/Basti/Documents/FirstCNN_Res/test", "E:/Users/Basti/Documents/FirstCNN_Res/train")
+files = splitdata.load_image_names(spectrogram_path)
+splitdata.split_data_in_two(files, 80, spectrogram_path, test_img_path, train_img_path)
 
 # LOAD DATASET
-train_images, train_labels, test_images, test_labels = pp.GenerateArrays(train_path="E:/Users/Basti/Documents/FirstCNN_Res/train",
-                                                                         test_path="E:/Users/Basti/Documents/FirstCNN_Res/test",
+train_images, train_labels, test_images, test_labels = pp.GenerateArrays(train_path=train_img_path, test_path=test_img_path,
                                                                          csv_file="metadata/UrbanSound8K.csv")
 print("Finished Loading Data")
 
