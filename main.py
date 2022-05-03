@@ -19,17 +19,17 @@ longaudio_path = "res/longaudio"
 train_img_path = "res/train"
 test_img_path = "res/test"
 
-dft_freq_scale = "log"
+dft_freq_scale = "mel"
 
 # COLLECT FILES LONGER THEN 1 SEC
 # pp.CollectLongFiles(original_path=audio_path, target_path=longaudio_path, min_duration=1)
 
 # CREATE SPECTROGRAMS
-pp.CreateSpectrograms(longaudio_path, spectrogram_path, FrameSize=1024, HopSize=256, freq_scale=dft_freq_scale)
+# pp.CreateSpectrograms(longaudio_path, spectrogram_path, FrameSize=1024, HopSize=256, freq_scale=dft_freq_scale)
 
 # SPLIT DATA
-files = splitdata.load_image_names(spectrogram_path)
-splitdata.split_data_in_two(files, 80, spectrogram_path, test_img_path, train_img_path)
+# files = splitdata.load_image_names(spectrogram_path)
+# splitdata.split_data_in_two(files, 80, spectrogram_path, test_img_path, train_img_path)
 
 # LOAD DATASET
 train_images, train_labels, test_images, test_labels = pp.GenerateArrays(train_path=train_img_path, test_path=test_img_path,
@@ -63,12 +63,12 @@ def Build_Train_Test_Model():
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dense(128, activation='relu'))
-    model.add(keras.layers.Dense(10))
+    model.add(keras.layers.Dense(10, activation='softmax'))
 
     # TRAIN MODEL
     print("starting to train model...")
     model.compile(optimizer='adam',
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), #austauschen z.b hinge loss
                   metrics=['accuracy'])
 
     history = model.fit(train_images, train_labels, epochs=5,
