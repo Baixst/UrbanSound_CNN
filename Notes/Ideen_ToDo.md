@@ -17,6 +17,7 @@
 - Colorcoding Scale anpassen:
   - Amplituden unter einem Threshhold schwarz anzeigen
   - feste Range anstatt dynamischer verwenden
+- Interpolation zwischen "Kasten"
 
 ### Training:
 - Epochen erhöhen

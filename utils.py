@@ -27,8 +27,7 @@ def CheckDurations(path):
     return durations
 
 
-def plot_spectrogram(audioFileName, Y, samplerate, frame_size, hop_size, figure, save_path, y_axis="linear", save_image=False, show_plot=True):
-    # fig = plt.figure(figsize=(4, 2))
+def plot_spectrogram(audioFileName, Y, samplerate, frame_size, hop_size, save_path, y_axis, save_image, show_plot, figure):
     librosa.display.specshow(Y, sr=samplerate, hop_length=hop_size, x_axis="time", y_axis=y_axis)
 
     # plt.colorbar(format="%+2.f dB")
@@ -69,6 +68,14 @@ def clear_directory(dir_path):
     return
 
 
+def delete_file(file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    else:
+        print("Could not delete " + file_path + " because it does not exist")
+    return
+
+
 def print_class_distribution(path):
     classes = {
         "0": 0
@@ -86,3 +93,12 @@ def print_class_distribution(path):
     print(classes)
     return
 
+
+def progress_bar(current, total, bar_length=30):
+    fraction = current / total
+    arrow = int(fraction * bar_length - 1) * '-' + '>'
+    padding = int(bar_length - len(arrow)) * ' '
+    ending = '\n' if current == total else '\r'
+
+    print(f'Progress: [{arrow}{padding}] {int(fraction*100)}% --- {current}/{total}', end=ending)
+    return
