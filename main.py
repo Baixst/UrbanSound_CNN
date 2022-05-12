@@ -1,21 +1,24 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import preprocess as pp
 import splitdata
 import tensorflow as tf
 from tensorflow import keras
 import seaborn as sns
+import librosa
 
 # Path Parameters
-spectrogram_path = "res/img"
+spectrogram_path = "res/img_dwt"
 audio_path = "res/audio"
-longaudio_path = "res/longaudio"
+longaudio_path = "res/longaudio2"
 metadata_csv = "metadata/UrbanSound8K.csv"
 train_csv, test_csv = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"
 
 # Script Tasks
 collect_long_files = False
-create_spectrograms = True
-split_data = True
+create_stft_spectrograms = False
+create_dwt_spectrograms = False
+split_data = False
 load_dataset = True
 build_and_train = True
 
@@ -23,7 +26,7 @@ build_and_train = True
 dft_freq_scale = "log"
 frame_size = 1024
 hop_size = 256
-img_size_x, img_size_y = 128, 128
+img_size_x, img_size_y = 64, 64
 my_dpi = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
@@ -37,9 +40,16 @@ if collect_long_files:
     pp.CollectLongFiles(original_path=audio_path, target_path=longaudio_path, min_duration=1)
 
 # CREATE SPECTROGRAMS
-if create_spectrograms:
-    pp.CreateSpectrograms(longaudio_path, spectrogram_path, FrameSize=frame_size, HopSize=hop_size,
-                          freq_scale=dft_freq_scale, px_x=img_size_x, px_y=img_size_y, monitor_dpi=my_dpi)
+# use Discrete Fourier Transform
+if create_stft_spectrograms:
+    pp.CreateSTFTSpectrograms(longaudio_path, spectrogram_path, FrameSize=frame_size, HopSize=hop_size,
+                              freq_scale=dft_freq_scale, px_x=img_size_x, px_y=img_size_y, monitor_dpi=my_dpi,
+                              fill_mode="duplicate")  # "silence" is possible aswell
+
+# use Discrete Wavelet Transform
+if create_dwt_spectrograms:
+    # pp.CreateCWTScaleogram()
+    pp.CreateDWTScaleogram()
 
 # SPLIT DATA
 if split_data:
@@ -86,15 +96,33 @@ def Build_Train_Test_Model():
                         validation_data=(test_images, test_labels))
 
     # EVALUATE MODEL
+    print("------------------- \nHistory:")
+    EvaluateEpochs(history)
     print("---------------------------- \nEvaluation of Model:")
     test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
     Show_Confusion_Matrix(model, test_acc)
 
     return
 
+def EvaluateEpochs(history):
+    print(history.history.keys())
+    print("Loss: " + str(history.history['loss']))
+    print("Val_Loss: " + str(history.history['val_loss']))
+    print("Accuracy: " + str(history.history['accuracy']))
+    print("Val_Accuracy: " + str(history.history['val_accuracy']))
+
+    print("---------\nBest Epoch per key:")
+    loss_arr, acc_arr = np.array(history.history['loss']), np.array(history.history['accuracy'])
+    loss_arr, acc_arr = np.around(loss_arr, 3), np.around(acc_arr, 3)
+
+    print("best loss value: " + str(min(loss_arr)))
+    print("best loss epoch: " + str(loss_arr.argmin()+1))
+    print("best acc value: " + str(max(acc_arr)))
+    print("best acc epoch: " + str(acc_arr.argmax()+1))
+
+
 
 def Show_Confusion_Matrix(model, test_acc):
-
     predictions = model.predict(test_images)
     predictions = tf.argmax(predictions, axis=-1)
     cm = tf.math.confusion_matrix(test_labels, predictions)

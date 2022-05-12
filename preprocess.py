@@ -1,14 +1,87 @@
 import os
 import shutil
+import scipy
+import wavfile
 import soundfile as sf
 import numpy as np
 from numpy import asarray
 import librosa
+from scipy.interpolate import griddata
+from scipy import signal
 import utils
 from matplotlib import pyplot as plt
 import pandas as pd
 import PIL
 from PIL import Image
+import pywt
+from pylab import *
+import soundfile as sf
+
+def CreateCWTScaleogram():
+    # 1. Read Audio file
+    audio_file = "res/audio/34050-7-0-0.wav"
+    data, samplerate = librosa.load(audio_file)
+    data = data / max(data)
+    ob = sf.SoundFile(audio_file)
+    print("Samplerate of audiofile: " + str(format(ob.samplerate)))
+
+    scales = np.arange(1, 65) # range of scales
+    wavelet = "morl"
+    times = data[:max(scales)*500]
+    times = times / max(times)
+    print(times.shape)
+
+    dt = 1 / samplerate # timestep difference
+    frequencies = pywt.scale2frequency(wavelet, scales) / dt  # Get frequencies corresponding to scales
+
+
+    coeffs, freqs = pywt.cwt(times, scales, wavelet)
+
+    # create scalogram
+    plt.imshow(coeffs, cmap='gray', aspect='auto')
+    plt.ylabel('Scale')
+    plt.xlabel('Time')
+    plt.show()
+
+    return
+
+
+def CreateDWTScaleogram():
+    # 1. Read Audio file
+    audio_file = "res/audio/34050-7-0-0.wav"
+    data, samplerate = librosa.load(audio_file)
+    data = data / max(data)
+    ob = sf.SoundFile(audio_file)
+    print("Samplerate of audiofile: " + str(format(ob.samplerate)))
+
+    # data = [0] * 32
+    # data[0] = 1
+    data = [1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8]
+    wavelet = "haar"
+    max_level = pywt.dwt_max_level(len(data), wavelet)
+
+    # Multilevel decomposition
+    result_wavedec = pywt.wavedec(data, wavelet, level=max_level)
+    n = len(result_wavedec)
+    print("wavedec results:")
+    print("cA: " + str(result_wavedec[0]))
+    print("cD" + str(n-1) + ": " + str(result_wavedec[1]))
+    print("cD" + str(n-2) + ": " + str(result_wavedec[2]))
+    print("cD" + str(n-3) + ": " + str(result_wavedec[3]))
+    print("cD" + str(n-4) + ": " + str(result_wavedec[4]))
+
+    # Single level DWT
+    cA, cD = pywt.dwt(data, wavelet)
+    print("----------------------")
+    print("dwt results:")
+    print("cA: " + str(cA.shape))
+    print(cA)
+    print("------")
+    print("cD: " + str(cD.shape))
+    print(cD)
+
+
+    return
 
 
 def CollectLongFiles(original_path, target_path, min_duration):
@@ -16,9 +89,7 @@ def CollectLongFiles(original_path, target_path, min_duration):
     file_list = os.listdir(original_path)
     utils.clear_directory(target_path)
 
-    durations = {
-        "4.0": 0
-    }
+    durations = {"4.0": 0}
 
     for file in file_list:
         filepath = original_path + "/" + file
@@ -40,7 +111,7 @@ def CollectLongFiles(original_path, target_path, min_duration):
     return
 
 
-def AugementData(audio_array, sample_rate, target_duration):
+def DuplicateDataUntilDuration(audio_array, sample_rate, target_duration):
     duration = len(audio_array) / sample_rate
 
     if duration < target_duration:
@@ -48,12 +119,29 @@ def AugementData(audio_array, sample_rate, target_duration):
             audio_array = np.append(audio_array, audio_array)
             duration = len(audio_array) / sample_rate
 
-    target_length = 4 * sample_rate
+    target_length = target_duration * sample_rate
     audio_array = audio_array[0:target_length]
 
     return audio_array
 
-def CreateSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_scale, px_x, px_y, monitor_dpi):
+def FillWithSilenceUntilDuration(audio_array, sample_rate, target_duration):
+    duration = len(audio_array) / sample_rate
+    if duration < target_duration:
+        target_samples = sample_rate * target_duration
+        extra_samples = target_samples - len(audio_array)
+        arr_type = audio_array.dtype
+
+        zero_arr = np.zeros(extra_samples, arr_type)
+        audio_array = np.append(audio_array, zero_arr)
+    else:
+        target_length = target_duration * sample_rate
+        audio_array = audio_array[0:target_length]
+
+    return audio_array
+
+
+def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_scale, px_x, px_y, monitor_dpi,
+                           fill_mode="duplicate"):
     utils.clear_directory(img_save_path)
     file_list = os.listdir(audio_path)
     amount_files = len(file_list)
@@ -61,14 +149,17 @@ def CreateSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_scale
     print("Generating " + str(amount_files) + " Spectrograms")
 
     # set output image size
-    x_offset = 0 # needed cause matplotlib is weird, play around with value until it works
+    x_offset = 0  # needed because matplotlib is weird, play around with value until it works
     fig = plt.figure(figsize=(px_x / (monitor_dpi + x_offset), px_y / monitor_dpi))
 
     for file in file_list:
         file_path = audio_path + "/" + file
 
         audioArray, sampleRate = librosa.load(file_path)
-        audioArray = AugementData(audioArray, sampleRate, 4)
+        if fill_mode == "duplicate":
+            audioArray = DuplicateDataUntilDuration(audioArray, sampleRate, 4)
+        elif fill_mode == "silence":
+            audioArray = FillWithSilenceUntilDuration(audioArray, sampleRate, 4)
 
         # 1.) Extract Short-Time Fourier Transform
         short_audio = librosa.stft(audioArray, n_fft=FrameSize, hop_length=HopSize)

@@ -48,6 +48,7 @@ def plot_spectrogram(audioFileName, Y, samplerate, frame_size, hop_size, save_pa
     figure.clear()
     return
 
+
 def GenerateImageName(audio_file_name, save_path):
     string_list = audio_file_name.split(".")
     img_name = string_list[0] + ".png"
