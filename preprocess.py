@@ -124,6 +124,7 @@ def DuplicateDataUntilDuration(audio_array, sample_rate, target_duration):
 
     return audio_array
 
+
 def FillWithSilenceUntilDuration(audio_array, sample_rate, target_duration):
     duration = len(audio_array) / sample_rate
     if duration < target_duration:
@@ -179,6 +180,14 @@ def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_s
 
     return
 
+def GenerateArraysCrossVal(data_csv, img_path, px_x, px_y):
+    df = pd.read_csv(data_csv)
+    file_list = os.listdir(img_path)
+
+    labels = GenerateLabelArray(df)
+    image_data = GenerateImageArray(df, file_list, img_path, px_x, px_y)
+    return image_data, labels
+
 
 def GenerateArrays(train_csv, test_csv, img_path, px_x, px_y):
     df_train = pd.read_csv(train_csv)
@@ -212,7 +221,7 @@ def GenerateLabelArray(dataframe):
 
 
 def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y):
-    amount_files = int(dataframe.size / 2)
+    amount_files = len(dataframe.index)
     print("collecting data from " + str(amount_files) + " images" )
 
     files_added = 0

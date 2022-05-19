@@ -1,9 +1,8 @@
-import csv
 import os
+import csv
 import random
-import shutil
-import utils
 import pandas as pd
+import preprocess as pp
 
 def load_file_names(path):
     file_list = os.listdir(path)
@@ -47,40 +46,41 @@ def split_csv(files, main_csv, train_csv, test_csv, train_percentage):
 
     trainCSV.close()
     testCSV.close()
+
+    # shuffel rows of csv files
+    df = pd.read_csv(train_csv)
+    shuffled_df = df.sample(frac=1)
+    shuffled_df.to_csv(train_csv, index=False)
+
+    df = pd.read_csv(test_csv)
+    shuffled_df = df.sample(frac=1)
+    shuffled_df.to_csv(test_csv, index=False)
+
     return
 
 
-def split_data_in_two(dataset, train_percentage, origin_path, test_set_path, train_set_path):
-    utils.clear_directory(train_set_path)
-    utils.clear_directory(test_set_path)
-    total = len(dataset)
-    train_total = int(total / 100 * train_percentage)
+def create_cross_val_csv(files, main_csv, result_csv):
+    random.shuffle(files)
+    total = len(files)
+    print(total)
+    resultCSV = open(result_csv, 'w+', encoding='UTF8', newline='')
+    writer = csv.writer(resultCSV)
 
-    random.shuffle(dataset)
+    # write header and filenames + classID to csv files
+    csv_header = ["slice_file_name", "classID"]
+    writer.writerow(csv_header)
 
-    train_data = []
-    test_data = []
-    counter = 0
+    df = pd.read_csv(main_csv)
+    for index, row in df.iterrows():
+        if row["slice_file_name"] in files:
+            values = [row["slice_file_name"], row["classID"]]
+            writer.writerow(values)
+    resultCSV.close()
 
-    while counter < train_total:
-        train_data.append(dataset[counter])
-        counter += 1
-
-    while counter < total:
-        test_data.append(dataset[counter])
-        counter += 1
-
-    print("Copying " + str(len(train_data)) + " files to trainset...")
-    for file in train_data:
-        filepath = origin_path + "/" + file
-        targetpath = train_set_path + "/" + file
-        shutil.copyfile(filepath, targetpath)
-
-    print("Copying " + str(len(test_data)) + " files to trainset...")
-    for file in test_data:
-        filepath = origin_path + "/" + file
-        targetpath = test_set_path + "/" + file
-        shutil.copyfile(filepath, targetpath)
+    # shuffel csv rows
+    df = pd.read_csv(result_csv)
+    shuffled_df = df.sample(frac=1)
+    shuffled_df.to_csv(result_csv, index=False)
 
     return
 
@@ -89,3 +89,28 @@ def get_audio_name(imagename):
     strings = imagename.split(".")
     audioname = strings[0] + ".wav"
     return audioname
+
+
+def create_validation_dataset(data, labels, val_percentage):
+
+    val_total = int((len(data) / 100) * val_percentage)
+
+    data_val = data[:val_total]
+    partial_data_train = data[val_total:]
+    labels_val = labels[:val_total]
+    partial_labels_train = labels[val_total:]
+    print("Using " + str(len(labels_val)) + " files for validation")
+
+    return data_val, partial_data_train, labels_val, partial_labels_train
+
+def get_def_cross_val_arrays(index, csv_path, img_path, px_x, px_y):
+    data_csv = csv_path + "/train" + str(index) + ".csv"
+    part_X_train, part_y_train = pp.GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
+
+    data_csv = csv_path + "/val" + str(index) + ".csv"
+    X_val, y_val = pp.GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
+
+    data_csv = csv_path + "/test" + str(index) + ".csv"
+    X_test, y_test = pp.GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
+
+    return part_X_train, part_y_train, X_val, y_val, X_test, y_test

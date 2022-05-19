@@ -30,6 +30,8 @@
 - Anzahl an Convolutional Layers
 - Anzahl an Deep Layers
 - Auflösung von Convolutional oder Deep Layers ändern
+- Change Learning Rate
+  - change rate over time (https://www.tensorflow.org/tutorials/keras/overfit_and_underfit)
 
 ### Evaluation:
 
