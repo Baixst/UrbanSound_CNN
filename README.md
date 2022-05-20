@@ -6,6 +6,8 @@ Python Projekt für Masterarbeit (Klassifizierung von Audiodaten mit CNNs)
 In root directory den Ordner "res/" anlegen. Darin sollten sich die Audio oder Bilddaten
 befinden. Diese sind zu groß für Git und werden daher manuell verwaltet.
 
+Außerdem sollte der Ordner "results/" angelegt werden. Dort werden Ergebnisse von letzten Run in Form von CSVs und Plots gespeichert.
+
 ## Datensatz
 UrbandSound8K: https://urbansounddataset.weebly.com/urbansound8k.html
 
