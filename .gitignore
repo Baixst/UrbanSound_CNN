@@ -1,6 +1,12 @@
 # Audio/Images files to big for Git
 res/
 
+# Weights and Biases Run Logs
+wandb/
+
+# Result Plots and CSVs
+results/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

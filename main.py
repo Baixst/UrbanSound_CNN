@@ -6,7 +6,16 @@ from sklearn.model_selection import KFold
 import preprocess as pp
 import evaluation as eva
 import splitdata as split
+import wandb
+from wandb.keras import WandbCallback
 
+run = wandb.init(project="my-test-project", entity="baixst",
+                 config={
+                    "image_type": "stft",
+                    "learning_rate": 0.01,
+                    "epochs": 10,
+                    "batch_size": 128})
+config = wandb.config
 
 # Path Parameters
 SPECTROGRAMM_PATH = "res/img_test"
@@ -35,7 +44,7 @@ MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play
 
 # Training Parameters
 VAL_SET_PERCENTAGE = 10
-TRAIN_EPOCHS = 3
+TRAIN_EPOCHS = config.get("epochs")
 # BATCH_SIZE = 0
 # TRAINING_RATE = 0
 # DROPOUT_RATE = 0
@@ -94,7 +103,7 @@ def Build_Train_Test_Model(train_data, train_labels, val_data, val_labels):
                   metrics=['accuracy'])
 
     history = model.fit(train_data, train_labels, epochs=TRAIN_EPOCHS,
-                        validation_data=(val_data, val_labels))
+                        validation_data=(val_data, val_labels), callbacks=[WandbCallback()])
 
     return model, history
 
@@ -218,3 +227,4 @@ if build_and_train:
         test_loss, test_acc = model.evaluate(testImages, testLabels, verbose=2)
         eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testImages, testLabels)
 
+    run.finish()
