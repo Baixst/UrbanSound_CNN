@@ -29,8 +29,8 @@ collect_dwt_data = False
 create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = True
-build_and_train_DWT = False
+build_and_train_STFT = False
+build_and_train_DWT = True
 build_and_train_Raw_MaxPool = False
 
 # Preprocess Parameters
