@@ -3,6 +3,8 @@ import numpy as np
 import seaborn as sns
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import sklearn
+from sklearn.metrics import balanced_accuracy_score
 
 def Show_Confusion_Matrix(class_names, model, test_acc, test_images, test_labels):
     predictions = model.predict(test_images)
@@ -19,14 +21,22 @@ def Show_Cross_Confusion_Matrix(class_names, test_acc, predictions, true_labels)
 
 
 def plot_confusion_matrix(class_names, test_acc, predictions, true_labels):
+    balanced_acc = balanced_accuracy_score(y_pred=predictions, y_true=true_labels)
+    print("----")
+    print("Accuracy: " + str(round(test_acc, 3)))
+    print("Balanced Accuracy: " + str(round(balanced_acc, 3)))
+    print("----")
+
     cm = tf.math.confusion_matrix(true_labels, predictions)
     cm = cm / cm.numpy().sum(axis=1)[:, tf.newaxis]
+    cm = np.transpose(cm)
 
     fig = plt.figure(figsize=(10, 8))
     sns.heatmap(cm, annot=True, xticklabels=class_names, yticklabels=class_names, fmt='.2g')
-    plt.xlabel("Predicted")
-    plt.ylabel("True")
-    fig.suptitle(("Overall Accuracy = " + str(round(test_acc, 3))))
+    plt.ylabel("Predicted")
+    plt.xlabel("True")
+    fig.suptitle(("Overall Accuracy = " + str(round(test_acc, 3))+"\n" +
+                  "Balanced Accuracy = " + str(round(balanced_acc, 3))))
     plt.subplots_adjust(left=0.185, bottom=0.225, right=1, top=0.89, wspace=0.2, hspace=0.2)
     fig.savefig("results/ConfusionMatrix.png", bbox_inches='tight')
     plt.show()
@@ -70,7 +80,7 @@ def evaluate_epochs(histories):
     return
 
 
-def EvaluteCrossValidation(models, histories, accs, losses, predictions_arr, test_labels_arr, class_names):
+def EvaluteCrossValidation(histories, accs, losses, predictions_arr, test_labels_arr, class_names):
     total_acc, total_loss = 0, 0
     counter = 0
     for acc in accs:
@@ -91,9 +101,6 @@ def EvaluteCrossValidation(models, histories, accs, losses, predictions_arr, tes
     evaluate_epochs(histories)
 
     Show_Cross_Confusion_Matrix(class_names, total_acc, predictions_arr, test_labels_arr)
-
-    # predictions = model.predict(test_images)
-    # predictions = tf.argmax(predictions, axis=-1)
 
     return
 

@@ -1,4 +1,5 @@
 import os
+import csv
 import soundfile as sf
 import librosa
 import librosa.display
@@ -36,6 +37,22 @@ def plot_spectrogram(audioFileName, Y, samplerate, frame_size, hop_size, save_pa
 
     cmap = plt.get_cmap("gray")
     plt.set_cmap(cmap)
+    plt.axis('off')
+
+    if save_image:
+        image_name = GenerateImageName(audioFileName, save_path)
+        figure.savefig(image_name, bbox_inches='tight', pad_inches=0)
+    if show_plot:
+        plt.show()
+
+    plt.clf()
+    figure.clear()
+    return
+
+
+def plot_scalogram(audioFileName, Y, save_path, save_image, show_plot, figure):
+
+    plt.imshow(Y, cmap='gray', aspect='auto')  # seismic is a nice cmap
     plt.axis('off')
 
     if save_image:
@@ -103,3 +120,34 @@ def progress_bar(current, total, bar_length=30):
 
     print(f'Progress: [{arrow}{padding}] {int(fraction*100)}% --- {current}/{total}', end=ending)
     return
+
+
+def PrintDurationInfo(durations):
+
+    min_duration = 100
+    max_duration = 0
+    amount_4sec_clips = 0
+    sum = 0
+    amount_clips = 0
+
+    for key in sorted(durations):
+        if float(key) > max_duration:
+            max_duration = float(key)
+        if float(key) < min_duration:
+            min_duration = float(key)
+
+        sum = sum + (float(key) * durations[key])
+        amount_clips += durations[key]
+
+    mean_duration = round(sum / amount_clips, 5)
+
+    print("------------------------------------------")
+    print("Anzahl an 4sek clips: " + str(durations["4.0"]))
+    print("Anzahl unterschiedlicher Zeiten: " + str(len(durations)))
+    print("Längster Clip: " + str(max_duration))
+    print("Kürzester Clip: " + str(min_duration))
+    print("Durchschnittliche Länge: " + str(mean_duration))
+    print("------------------------------------------")
+
+    return
+
