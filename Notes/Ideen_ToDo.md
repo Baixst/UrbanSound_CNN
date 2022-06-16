@@ -5,9 +5,9 @@
 ### Rechenzeit:
 - Erstellen von Label und Imagedata Matrizen
 
-### Preprocessing:
+### Preprocessing STFT:
 
-- MEL vs. Linear vs. Log Scale für Frequenz
+- MEL vs. Linear vs. Log Scale für Frequenz (Mel oder log scheinbar beides gleich gut)
 - Spectrogram Bildauflösung erhöhen oder senken
 - Spectrogram Format ändern (nicht AxA sondern AxB mit A>B oder B>A)
 - Native Samplerate von Audiofile bei Spectrogramerstellung beibehalten
@@ -22,6 +22,10 @@
   - feste Range anstatt dynamischer verwenden
 - Interpolation zwischen "Kasten"
 - Bilddaten nicht Linear normalisieren (bisher wird "img_arr = img_arr / 255" verwendet, z.B. Softmax benutzen)
+
+### Preprocessing / Feature Extraction Wavelet Transform
+- Detailkoeffizienten berechnen --> Features wie Entropie berechnen und speichern (z.B. in CSV)
+  - mögliche Feature: Shanon-Entropie, Varianz, Mean of absolute value per subband, standardabweichung pro subband
 
 ### Training:
 - Epochen erhöhen

@@ -103,14 +103,12 @@ def create_validation_dataset(data, labels, val_percentage):
 
     return data_val, partial_data_train, labels_val, partial_labels_train
 
+
 def get_def_cross_val_arrays(index, csv_path, img_path, px_x, px_y):
     data_csv = csv_path + "/train" + str(index) + ".csv"
-    part_X_train, part_y_train = pp.GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
-
-    data_csv = csv_path + "/val" + str(index) + ".csv"
-    X_val, y_val = pp.GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
+    X_train, y_train = pp.GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
 
     data_csv = csv_path + "/test" + str(index) + ".csv"
     X_test, y_test = pp.GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
 
-    return part_X_train, part_y_train, X_val, y_val, X_test, y_test
+    return X_train, y_train, X_test, y_test

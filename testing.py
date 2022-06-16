@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 import utils
 import numpy as np
 import preprocess
-from sklearn.preprocessing import MinMaxScaler
+import scipy.signal as scsi
 
 
 def findMonoClip(audio_path, target):
@@ -80,11 +80,11 @@ def plotSpectrogramWithSamplerate(samplerate, file, y_axis, audio_arr=[0]):
 
     librosa.display.specshow(Y_log_audio, sr=sampleRate, hop_length=256, x_axis="time", y_axis=y_axis)
 
-    cmap = plt.get_cmap("gray")
+    cmap = plt.get_cmap("seismic")
     plt.set_cmap(cmap)
     plt.axis('off')
 
-    image_name = "res/test2/stft_spec_" + str(sampleRate) + ".png"
+    image_name = "res/test/stft_spec_" + str(sampleRate) + ".png"
     figure.savefig(image_name, bbox_inches='tight', pad_inches=0)
     plt.clf()
     figure.clear()
@@ -95,9 +95,54 @@ def plotSpectrogramWithSamplerate(samplerate, file, y_axis, audio_arr=[0]):
 # convertMonoToStereo("res/test/mono.wav", "res/test/stereo.wav")
 # findClipWithSamplerate(8000, "res/audio", "res/test")
 
-file_path = "res/test/sr8000.wav"
-savePath = "res/test2"
-# plotSpectrogramWithSamplerate(samplerate=8000, file=file_path, y_axis="log")
+def getLogPsdSegments(segments, fs, file):
+    """
+    Parameters
+    ----------
+    segments : array [n_segments x samples_per_segment]
+        segment matrix
+        each line represent one segment
+        each column is a sampling point out of the input signal
+    fs : int
+        used sampling frequency on the signal
+
+    Returns
+    -------
+    freq : array
+        frequency over the index of psd_segments
+    psd_segments : array [n_segments x ~samples_per_segment/2]
+        power over the frequencies given in freq
+    """
+    audioArray, sampleRate = librosa.load(file, sr=fs)
+    freq, psdSegments = scsi.periodogram(segments, fs=fs)
+    psdSegments = 10 * np.log10(psdSegments + 1);
+    return freq, psdSegments
+
+
+def plotPSD(file):
+    audioArray, sampleRate = librosa.load(file, sr=44100)
+    freqs, psd = scsi.welch(audioArray, sampleRate, nperseg=1024, noverlap=512)
+
+    plt.figure(figsize=(12, 8))
+    plt.semilogy(freqs, psd)
+    plt.title('Power spectral density')
+    plt.xlabel('Frequency')
+    plt.ylabel('Power')
+    plt.show()
+    return
+
+
+# plotPSD("res/audio_4sec/157695-3-0-2.wav")
+
+
+# file_path = "res/audio/181725-3-0-16.wav"
+# savePath = "res/test"
+# plotSpectrogramWithSamplerate(samplerate=22050, file=file_path, y_axis="mel")
+# plotPSD(file_path)
+# getLogPsdSegments(fs=22050, file=file_path)
+
+
+
 
 # preprocess.CreateDWTScaleogram()
 
@@ -107,7 +152,7 @@ savePath = "res/test2"
 
 
 # -------------------------------------------------------------------------------------
-def CreateDefinedFoldCSVs_test_val():
+def CreateDefinedFoldCSVs_test():
     df_main = pd.read_csv("metadata/UrbanSound8K.csv")
 
     for i in range(1, 11):
@@ -128,27 +173,6 @@ def CreateDefinedFoldCSVs_test_val():
         shuffled_df = df.sample(frac=1)
         shuffled_df.to_csv(result_csv, index=False)
 
-        # validation files
-        result_csv = "metadata/def_folds/val" + str(i) + ".csv"
-        csvFile = open(result_csv, 'w+', encoding='UTF8', newline='')
-        writer = csv.writer(csvFile)
-        writer.writerow(["slice_file_name", "classID", "fold"])
-
-        j = i+1
-        if j == 11:
-            j = 1
-
-        for index, row in df_main.iterrows():
-            if row["fold"] == j:
-                values = [row["slice_file_name"], row["classID"], row["fold"]]
-                writer.writerow(values)
-        csvFile.close()
-
-        # shuffel csv rows
-        df = pd.read_csv(result_csv)
-        shuffled_df = df.sample(frac=1)
-        shuffled_df.to_csv(result_csv, index=False)
-
     return
 
 
@@ -158,25 +182,25 @@ def CreateDefinedFoldCSVs_train():
     for i in range(1, 11):
 
         if i == 1:
-            folds = [3,4,5,6,7,8,9,10]
+            folds = [2,3,4,5,6,7,8,9,10]
         if i == 2:
-            folds = [1,4,5,6,7,8,9,10]
+            folds = [1,3,4,5,6,7,8,9,10]
         if i == 3:
-            folds = [1,2,5,6,7,8,9,10]
+            folds = [1,2,4,5,6,7,8,9,10]
         if i == 4:
-            folds = [1,2,3,6,7,8,9,10]
+            folds = [1,2,3,5,6,7,8,9,10]
         if i == 5:
-            folds = [1,2,3,4,7,8,9,10]
+            folds = [1,2,3,4,6,7,8,9,10]
         if i == 6:
-            folds = [1,2,3,4,5,8,9,10]
+            folds = [1,2,3,4,5,7,8,9,10]
         if i == 7:
-            folds = [1,2,3,4,5,6,9,10]
+            folds = [1,2,3,4,5,6,8,9,10]
         if i == 8:
-            folds = [1,2,3,4,5,6,7,10]
+            folds = [1,2,3,4,5,6,7,9,10]
         if i == 9:
-            folds = [1,2,3,4,5,6,7,8]
+            folds = [1,2,3,4,5,6,7,8,10]
         if i == 10:
-            folds = [2,3,4,5,6,7,8,9]
+            folds = [1,2,3,4,5,6,7,8,9]
 
         # test files
         result_csv = "metadata/def_folds/train" + str(i) + ".csv"
@@ -198,7 +222,7 @@ def CreateDefinedFoldCSVs_train():
     return
 
 
-# CreateDefinedFoldCSVs_test_val()
+# CreateDefinedFoldCSVs_test()
 # CreateDefinedFoldCSVs_train()
 
 # -------------------------------------------------------------------------------------
@@ -218,17 +242,19 @@ def plot_mfccs(audiofile):
     comp_mfccs = np.concatenate((mfccs, delta_mfccs, delta2_mfccs))
 
     # Normalize
+    mfccs = mfccs / np.amax(mfccs)
+    delta_mfccs = delta_mfccs / np.amax(delta_mfccs)
     delta2_mfccs = delta2_mfccs / np.amax(delta2_mfccs)
 
     # Visualise MFCCs
     plt.figure(figsize=(12, 6))
-    librosa.display.specshow(delta2_mfccs, x_axis="time", sr=sr)
+    librosa.display.specshow(delta_mfccs, x_axis="time", sr=sr)
     plt.colorbar(format="%+2f")
     plt.show()
     return
 
 
-plot_mfccs("res/audio/518-4-0-0.wav")
+# plot_mfccs("res/audio/518-4-0-0.wav")  # 344-3-0-0.wav for short dog bark clip
 
 # -------------------------------------------------------------------------------------
 
@@ -253,3 +279,125 @@ def plot_mel_spectrogram():
 
 
 # plot_mel_spectrogram()
+
+
+def create4secWaveFiles(orginal_files, save_path):
+    # preprocess.CollectLongFiles(orginal_files, save_path, 4)
+
+    file_list = os.listdir(orginal_files)
+    for file in file_list:
+        audio_array, sr = librosa.load(orginal_files + "/" + file)
+        duration = len(audio_array) / sr
+        if duration < 4:
+            audio_array = preprocess.DuplicateDataUntilDuration(audio_array, sr, 4)
+            wav_file = save_path + "/" + file
+            sf.write(wav_file, audio_array, sr, 'PCM_24')
+    return
+
+def createCenteredWaveFiles(orginal_files, save_path, target_duration):
+    samples_needed = target_duration * 22050
+    file_list = os.listdir(orginal_files)
+
+    for file in file_list:
+        audio_array, sr = librosa.load(orginal_files + "/" + file)
+
+        if len(audio_array) > samples_needed:
+            offset = int(len(audio_array) - samples_needed)
+            offset_front = int(offset / 2)
+            offset_end = samples_needed + offset_front
+            audio_array = audio_array[offset_front:offset_end]
+
+        else:
+            audio_array = preprocess.center_audiosignal(audio_array, sr, target_duration)
+
+        wav_file = save_path + "/" + file
+        sf.write(wav_file, audio_array, sr, 'PCM_24')
+    return
+
+
+createCenteredWaveFiles("res/audio", "res/audio_3sec_centered", 3)
+
+def GetSubtypeOf(filename):
+    ob = sf.SoundFile(filename)
+    print('Sample rate: {}'.format(ob.samplerate))
+    print('Channels: {}'.format(ob.channels))
+    print('Subtype: {}'.format(ob.subtype))
+    return
+
+# GetSubtypeOf("res/audio/100032-3-0-0.wav")
+
+def AnalizeAudioFiles(save_path):
+    subtypes = {
+        "PCM_16": 0
+    }
+    sampleRates = {
+        "44100": 0
+    }
+    channels = {
+        "2": 0
+    }
+    durations = {
+        "4.0": 0
+    }
+
+    filesAnalized = 0
+    filesInWrongFormat = []
+
+    file_list = os.listdir(save_path)
+
+    for file in file_list:
+        filepath = save_path + "/" + file
+
+        try:
+            ob = sf.SoundFile(filepath)
+            subtype = format(ob.subtype)
+            sampleRate = format(ob.samplerate)
+            channel = format(ob.channels)
+            duration = int(format(ob.frames)) / int(sampleRate)
+            duration = str(round(duration, 2))
+
+            if subtype == "IMA_ADPCM":
+                print(format(ob.subtype_info))
+
+            if subtype in subtypes:
+                subtypes[subtype] = subtypes[subtype] + 1
+            else:
+                subtypes[subtype] = 1
+
+            if sampleRate in sampleRates:
+                sampleRates[sampleRate] = sampleRates[sampleRate] + 1
+            else:
+                sampleRates[sampleRate] = 1
+
+            if channel in channels:
+                channels[channel] = channels[channel] + 1
+            else:
+                channels[channel] = 1
+
+            if duration in durations:
+                durations[duration] = durations[duration] + 1
+            else:
+                durations[duration] = 1
+
+            filesAnalized += 1
+            # if subtype == "FLOAT":
+            #    print(file)
+        except:
+            filesInWrongFormat.append(file)
+            print("Found bad file")
+
+    print("")
+    print("Subtypes: " + str(subtypes))
+    print("Samplerates: " + str(sampleRates))
+    print("Channels: " + str(channels))
+    utils.PrintDurationInfo(durations)
+    print("Amount of files in wrong format: " + str(len(filesInWrongFormat)))
+    print("Files analyzed: " + str(filesAnalized))
+    print("------------------------------------------")
+    print("Files in wrong format:")
+    for x in filesInWrongFormat:
+        print(x)
+    return
+
+
+# AnalizeAudioFiles("res/audio_4sec_centered")

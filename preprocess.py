@@ -1,7 +1,9 @@
 import os
 import shutil
+import csv
 import scipy
 import wavfile
+import statistics
 import soundfile as sf
 import numpy as np
 from numpy import asarray
@@ -9,6 +11,7 @@ import librosa
 from scipy.interpolate import griddata
 from scipy import signal
 import utils
+import feature_extraction as feat
 from matplotlib import pyplot as plt
 import pandas as pd
 import PIL
@@ -17,69 +20,162 @@ import pywt
 from pylab import *
 import soundfile as sf
 
-def CreateCWTScaleogram():
-    # 1. Read Audio file
-    audio_file = "res/audio/34050-7-0-0.wav"
-    data, samplerate = librosa.load(audio_file)
-    data = data / max(data)
-    ob = sf.SoundFile(audio_file)
-    print("Samplerate of audiofile: " + str(format(ob.samplerate)))
+def CreateCWTScaleograms(audio_path, img_save_path, freq_scales, wavelet, px_x, px_y, monitor_dpi, fill_mode):
 
-    scales = np.arange(1, 65) # range of scales
-    wavelet = "morl"
-    times = data[:max(scales)*500]
-    times = times / max(times)
-    print(times.shape)
+    utils.clear_directory(img_save_path)
+    file_list = os.listdir(audio_path)
+    amount_files = len(file_list)
+    images_finished = 0
+    print("Generating " + str(amount_files) + " Scalograms")
 
-    dt = 1 / samplerate # timestep difference
-    frequencies = pywt.scale2frequency(wavelet, scales) / dt  # Get frequencies corresponding to scales
+    # set output image size
+    x_offset = 0.5  # needed because matplotlib is weird, play around with value until it works
+    fig = plt.figure(figsize=(px_x / (monitor_dpi + x_offset), px_y / monitor_dpi))
 
+    for file in file_list:
+        # 1.) load audio data
+        file_path = audio_path + "/" + file
+        audioArray, sampleRate = librosa.load(file_path, sr=22050)
+        scales = np.arange(1, freq_scales + 1)  # range of scales
 
-    coeffs, freqs = pywt.cwt(times, scales, wavelet)
+        # 2.) extend short clips
+        if fill_mode == "duplicate":
+            audioArray = DuplicateDataUntilDuration(audioArray, sampleRate, 4)
+        elif fill_mode == "silence":
+            audioArray = FillWithSilenceUntilDuration(audioArray, sampleRate, 4)
+        elif fill_mode == "centered":
+            audioArray = center_audiosignal(audioArray, sampleRate, 4)
 
-    # create scalogram
-    plt.imshow(coeffs, cmap='gray', aspect='auto')
-    plt.ylabel('Scale')
-    plt.xlabel('Time')
-    plt.show()
+        # dt = 1 / sampleRate  # timestep difference
+        # frequencies = pywt.scale2frequency(wavelet, scales) / dt  # Get frequencies corresponding to scales
+
+        # 3.) calculate CWT coefficients
+        coeffs, freqs = pywt.cwt(audioArray, scales, wavelet)
+        coeffs = abs(coeffs)
+
+        # 4.) plot coefficients to scalogram
+        # plt.imshow(coeffs, cmap='seismic', aspect='auto')
+        # plt.ylabel('Scale')
+        # plt.xlabel('Time')
+        # plt.show()
+        # fig.savefig("results/cwt_scalogram/" + title + ".png")
+
+        utils.plot_scalogram(audioFileName=file, Y=coeffs, save_image=True, save_path=img_save_path,
+                               show_plot=False, figure=fig)
+
+        images_finished += 1
+        utils.progress_bar(images_finished, amount_files)
 
     return
 
 
-def CreateDWTScaleogram():
-    # 1. Read Audio file
-    audio_file = "res/audio/34050-7-0-0.wav"
-    data, samplerate = librosa.load(audio_file)
-    data = data / max(data)
-    ob = sf.SoundFile(audio_file)
-    print("Samplerate of audiofile: " + str(format(ob.samplerate)))
+def dwt_feature_extraction(audio_path, dwt_feature_csv):
+    """
+    Extract Detail Coeffs, build features from them and write results to csv file
+    """
 
-    # data = [0] * 32
-    # data[0] = 1
-    data = [1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8]
-    wavelet = "haar"
-    max_level = pywt.dwt_max_level(len(data), wavelet)
+    file_list = os.listdir(audio_path)
+    files_done = 0
 
-    # Multilevel decomposition
-    result_wavedec = pywt.wavedec(data, wavelet, level=max_level)
-    n = len(result_wavedec)
-    print("wavedec results:")
-    print("cA: " + str(result_wavedec[0]))
-    print("cD" + str(n-1) + ": " + str(result_wavedec[1]))
-    print("cD" + str(n-2) + ": " + str(result_wavedec[2]))
-    print("cD" + str(n-3) + ": " + str(result_wavedec[3]))
-    print("cD" + str(n-4) + ": " + str(result_wavedec[4]))
+    dataCSV = open(dwt_feature_csv, 'w+', encoding='UTF8', newline='')
+    data_writer = csv.writer(dataCSV)
+    csvHeader = ["audio_file"]
+    # write first csv line
+    for i in range(1, 15):  # second parameter is dwt max level+1
+        csvHeader.append("entropie_" + str(i))
+        csvHeader.append("mean_" + str(i))
+        csvHeader.append("variance_" + str(i))
+        csvHeader.append("std_" + str(i))
+        csvHeader.append("iqr_" + str(i))
+        csvHeader.append("skew_" + str(i))
+        csvHeader.append("kurtosis_" + str(i))
+        csvHeader.append("standard_error_mean" + str(i))
+        csvHeader.append("median_abs_deviation_" + str(i))
+    data_writer.writerow(csvHeader)
 
-    # Single level DWT
-    cA, cD = pywt.dwt(data, wavelet)
-    print("----------------------")
-    print("dwt results:")
-    print("cA: " + str(cA.shape))
-    print(cA)
-    print("------")
-    print("cD: " + str(cD.shape))
-    print(cD)
+    for file in file_list:
+        file_path = audio_path + "/" + file
 
+        # 1. Read Audio file
+        data, samplerate = librosa.load(file_path)
+        # data = data / max(data)
+        data = data[0:32768]
+        wavelet = "db1"
+        max_level = pywt.dwt_max_level(len(data), wavelet) - 1
+
+        coeffs = pywt.wavedec(data, wavelet, level=max_level, mode="symmetric")
+        line = [file]
+
+        MAX_median_abs_dev = 0
+        MAX_standard_error_mean = 0
+        MAX_iqr = 0
+        MAX_variation = 0
+
+        # Calculate Features
+        for i in range(1, len(coeffs)):
+            shannon_ent = feat.shannon_entropy(coeffs[i])
+            mean = statistics.mean(coeffs[i])
+            variance = statistics.variance(coeffs[i], mean)
+            std = np.std(coeffs[i])
+            iqr = scipy.stats.iqr(coeffs[i])
+            skew = scipy.stats.skew(coeffs[i])
+            kurtosis = scipy.stats.kurtosis(coeffs[i])
+            standard_error_mean = scipy.stats.sem(coeffs[i])
+            median_abs_deviation = scipy.stats.median_abs_deviation(coeffs[i])
+
+            line.append(shannon_ent)
+            line.append(mean)
+            line.append(variance)
+            line.append(std)
+            line.append(iqr)
+            line.append(skew)
+            line.append(kurtosis)
+            line.append(standard_error_mean)
+            line.append(median_abs_deviation)
+
+        # zero_crossing_rate
+
+        data_writer.writerow(line)
+        files_done += 1
+
+        utils.progress_bar(files_done, len(file_list))
+
+    dataCSV.close()
+    return
+
+
+def collect_all_DWT_data(audio_path, dwt_full_data_csv):
+    file_list = os.listdir(audio_path)
+    files_done = 0
+
+    dataCSV = open(dwt_full_data_csv, 'w+', encoding='UTF8', newline='')
+    data_writer = csv.writer(dataCSV)
+
+    for file in file_list:
+        audio_file = audio_path + "/" + file
+
+        # 1. Read Audio file
+        data, samplerate = librosa.load(audio_file)
+        # data = data / max(data)
+        data = data[0:32768]
+
+        wavelet = "db1"
+        max_level = pywt.dwt_max_level(len(data), wavelet)
+        print("max_level = " + str(max_level))
+
+        arr = np.array([[file]])
+        for i in range(1, max_level+1):
+            coeffs = pywt.wavedec(data, wavelet, level=i, mode="symmetric")
+            arr = np.append(arr, coeffs[0])
+            if i == max_level:
+                for j in range(0, max_level):
+                    arr = append(arr, coeffs[max_level-j])
+                    # arr length will be: amout of samples * 2 - 2 (only when sample amount is in x^2 line)
+        data_writer.writerow(arr)
+        files_done += 1
+
+        utils.progress_bar(files_done, len(file_list))
+    dataCSV.close()
 
     return
 
@@ -140,9 +236,31 @@ def FillWithSilenceUntilDuration(audio_array, sample_rate, target_duration):
 
     return audio_array
 
+def center_audiosignal(audio_array, sample_rate, target_duration):
+    """
+    Add zeroes infront and behind an audio signal (array) until it is target_duration in secons long
+    :param audio_array: array that contains the audio signal, must be shortern then target duration
+    :param sample_rate: sample rate of audio signal
+    :param target_duration: how long the resulting clip should be in seconds
+    :return: array like: [0, 0, 0, 1, 5, 6, 2, 1, 3, 0, 0, 0]
+    """
+
+    samples_needed = sample_rate * target_duration
+    len(audio_array)
+    if len(audio_array) == samples_needed:
+        return audio_array
+
+    padding = int((samples_needed - len(audio_array)) / 2) + 1
+    centered_signal = np.zeros(padding)
+    centered_signal = np.append(centered_signal, audio_array)
+    centered_signal = np.append(centered_signal, np.zeros(padding))
+    centered_signal = centered_signal[0:samples_needed]
+
+    return centered_signal
+
 
 def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_scale, px_x, px_y, monitor_dpi,
-                           fill_mode="duplicate"):
+                           duration, fill_mode="duplicate"):
     utils.clear_directory(img_save_path)
     file_list = os.listdir(audio_path)
     amount_files = len(file_list)
@@ -158,9 +276,11 @@ def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_s
 
         audioArray, sampleRate = librosa.load(file_path)
         if fill_mode == "duplicate":
-            audioArray = DuplicateDataUntilDuration(audioArray, sampleRate, 4)
+            audioArray = DuplicateDataUntilDuration(audioArray, sampleRate, duration)
         elif fill_mode == "silence":
-            audioArray = FillWithSilenceUntilDuration(audioArray, sampleRate, 4)
+            audioArray = FillWithSilenceUntilDuration(audioArray, sampleRate, duration)
+        elif fill_mode == "centered":
+            audioArray = center_audiosignal(audioArray, sampleRate, duration)
 
         # 1.) Extract Short-Time Fourier Transform
         short_audio = librosa.stft(audioArray, n_fft=FrameSize, hop_length=HopSize)
@@ -180,94 +300,3 @@ def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_s
 
     return
 
-def GenerateArraysCrossVal(data_csv, img_path, px_x, px_y):
-    df = pd.read_csv(data_csv)
-    file_list = os.listdir(img_path)
-
-    labels = GenerateLabelArray(df)
-    image_data = GenerateImageArray(df, file_list, img_path, px_x, px_y)
-    return image_data, labels
-
-
-def GenerateArrays(train_csv, test_csv, img_path, px_x, px_y):
-    df_train = pd.read_csv(train_csv)
-    df_test = pd.read_csv(test_csv)
-    file_list = os.listdir(img_path)
-
-    print("Generating Train Labels Array...")
-    train_labels = GenerateLabelArray(df_train)
-    print("Generating Test Labels Array...")
-    test_labels = GenerateLabelArray(df_test)
-
-    print("Generating train image data matrix...")
-    train_images = GenerateImageArray(df_train, file_list, img_path, px_x, px_y)
-    print("Generating test image data matrix...")
-    test_images = GenerateImageArray(df_test, file_list, img_path, px_x, px_y)
-
-    print("Train labels shape: " + str(train_labels.shape))
-    print("Train images shape: " + str(train_images.shape))
-    print("Test labels shape: " + str(test_labels.shape))
-    print("Test images shape: " + str(test_images.shape))
-    return train_images, train_labels, test_images, test_labels
-
-
-def GenerateLabelArray(dataframe):
-    arr = np.array([[]])
-    for index, row in dataframe.iterrows():
-        arr = np.append(arr, row["classID"])
-
-    arr = arr.reshape(-1, 1)
-    return arr
-
-
-def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y):
-    amount_files = len(dataframe.index)
-    print("collecting data from " + str(amount_files) + " images" )
-
-    files_added = 0
-    arr = np.array([[[]]])
-    for index, row in dataframe.iterrows():
-        string_list = row["slice_file_name"].split(".")
-        img_name = string_list[0] + ".png"
-
-        if img_name in file_list:
-            img_name = img_path + "/" + img_name
-            image = Image.open(img_name).convert("L")
-            data = asarray(image)
-            arr = np.append(arr, data)
-
-            files_added += 1
-            utils.progress_bar(current=files_added, total=amount_files)
-
-    arr = arr.reshape(-1, px_x, px_y, 1)
-    return arr
-
-
-def PrintDurationInfo(durations):
-
-    min_duration = 100
-    max_duration = 0
-    amount_4sec_clips = 0
-    sum = 0
-    amount_clips = 0
-
-    for key in sorted(durations):
-        if float(key) > max_duration:
-            max_duration = float(key)
-        if float(key) < min_duration:
-            min_duration = float(key)
-
-        sum = sum + (float(key) * durations[key])
-        amount_clips += durations[key]
-
-    mean_duration = round(sum / amount_clips, 5)
-
-    print("------------------------------------------")
-    print("Anzahl an 4sek clips: " + str(durations["4.0"]))
-    print("Anzahl unterschiedlicher Zeiten: " + str(len(durations)))
-    print("Längster Clip: " + str(max_duration))
-    print("Kürzester Clip: " + str(min_duration))
-    print("Durchschnittliche Länge: " + str(mean_duration))
-    print("------------------------------------------")
-
-    return
