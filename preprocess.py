@@ -259,8 +259,8 @@ def center_audiosignal(audio_array, sample_rate, target_duration):
     return centered_signal
 
 
-def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_scale, px_x, px_y, monitor_dpi,
-                           duration, fill_mode="duplicate"):
+def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, mels, freq_scale, px_x, px_y, monitor_dpi,
+                           duration, spec_type, fill_mode="duplicate"):
     utils.clear_directory(img_save_path)
     file_list = os.listdir(audio_path)
     amount_files = len(file_list)
@@ -282,16 +282,20 @@ def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, freq_s
         elif fill_mode == "centered":
             audioArray = center_audiosignal(audioArray, sampleRate, duration)
 
+
         # 1.) Extract Short-Time Fourier Transform
-        short_audio = librosa.stft(audioArray, n_fft=FrameSize, hop_length=HopSize)
+        if spec_type == "stft":
+            short_audio = librosa.stft(audioArray, n_fft=FrameSize, hop_length=HopSize)
+            # short_audio contains complex numbers (can't be visualized), square values to convert to floats
+            Y_audio = np.abs(short_audio) ** 2  # Y value is the amplitude (because we did a fourier transform)
+        if spec_type == "mel":
+            # does the same as the stft version but also applies mel bins to the result
+            Y_audio = librosa.feature.melspectrogram(y=audioArray, n_mels=mels, n_fft=FrameSize, hop_length=HopSize)
 
-        # 2.) calculate spectrogram
-        # 2.1 we currently have complex numbers (can't be visualized), square values to convert to floats
-        Y_audio = np.abs(short_audio) ** 2  # Y value is the amplitude (because we did a fourier transform)
-
-        # 2.2 convert amplitude values from linear to logarithmic scale
+        # 2.) convert amplitude values from linear to logarithmic scale (to get dB)
         Y_log_audio = librosa.power_to_db(Y_audio)
 
+        # 3.) Plot results
         utils.plot_spectrogram(audioFileName=file, Y=Y_log_audio, samplerate=sampleRate, frame_size=FrameSize,
             hop_size=HopSize, y_axis=freq_scale, save_image=True, save_path=img_save_path, show_plot=False, figure=fig)
 

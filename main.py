@@ -16,7 +16,7 @@ import loading as loader
 # config = wandb.config
 
 # Path Parameters
-AUDIO_PATH = "res/audio"
+AUDIO_PATH = "res/audio_4sec"
 IMAGE_PATH = "res/img_stft"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                              # main metadata csv from UrbandSound8K
 TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
@@ -24,19 +24,21 @@ CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path o
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 
 # Script Tasks
-create_stft_spectrograms = False
+create_spectrograms = False
 collect_dwt_data = False
 create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = False
-build_and_train_DWT = True
+build_and_train_STFT = True
+build_and_train_DWT = False
 build_and_train_Raw_MaxPool = False
 
 # Preprocess Parameters
-STFT_FREQ_SCALE = "mel"
+SPECTROGRAM_TYPE = "mel"
+SPEC_FREQ_SCALE = "mel"
 FRAME_SIZE = 1024
 HOP_SIZE = 256
+MEL_BINS = 128
 CWT_FREQ_SCALES = 64
 CWT_WAVELET = "morl"
 
@@ -61,10 +63,10 @@ CLASS_NAMES = ['air_conditioner', 'car_horn', 'children_playing', 'dog_bark', 'd
 
 # CREATE SPECTROGRAMS
 # use Short Time Fourier Transform
-if create_stft_spectrograms:
-    pp.CreateSTFTSpectrograms(AUDIO_PATH, IMAGE_PATH, FrameSize=FRAME_SIZE, HopSize=HOP_SIZE, duration=3,
-                              freq_scale=STFT_FREQ_SCALE, px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y, monitor_dpi=MY_DPI,
-                              fill_mode="duplicate")  # "centered", "none" or "silence" is possible aswell
+if create_spectrograms:
+    pp.CreateSTFTSpectrograms(AUDIO_PATH, IMAGE_PATH, FrameSize=FRAME_SIZE, HopSize=HOP_SIZE, mels=MEL_BINS, duration=4,
+                              freq_scale=SPEC_FREQ_SCALE, px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y, monitor_dpi=MY_DPI,
+                              spec_type=SPECTROGRAM_TYPE, fill_mode="duplicate")  # "centered", "none", "silence" or "duplicate"
 
 # use Wavelet Transform
 if collect_dwt_data:

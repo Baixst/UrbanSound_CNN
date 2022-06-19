@@ -80,7 +80,7 @@ def plotSpectrogramWithSamplerate(samplerate, file, y_axis, audio_arr=[0]):
 
     librosa.display.specshow(Y_log_audio, sr=sampleRate, hop_length=256, x_axis="time", y_axis=y_axis)
 
-    cmap = plt.get_cmap("seismic")
+    cmap = plt.get_cmap("magma")
     plt.set_cmap(cmap)
     plt.axis('off')
 
@@ -261,24 +261,48 @@ def plot_mfccs(audiofile):
 # preprocess.CreateSTFTSpectrograms("res/test", "res/test2", 1024, 256, "mel", 256, 256, 77,
 #                           fill_mode="duplicate")
 
-def plot_mel_spectrogram():
-    audiofile = "res/test/99179-9-0-12.wav"
-    y, sr = librosa.load(audiofile)
+def plot_mel_spectrogram(audiofile):
+    y, sr = librosa.load(audiofile, sr=22050)
 
-    S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmax=8000)
-    fig, ax = plt.subplots()
+    S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, n_fft=1024, hop_length=256, power=2)
+    fig = plt.figure(figsize=(10, 7))
     S_dB = librosa.power_to_db(S, ref=np.max)
-    img = librosa.display.specshow(S_dB, x_axis='time',
-                                   y_axis='mel', sr=sr,
-                                   fmax=8000, ax=ax)
-    fig.colorbar(img, ax=ax, format='%+2.0f dB')
-    ax.set(title='Mel-frequency spectrogram')
+    img = librosa.display.specshow(S_dB, n_fft=1024, hop_length=256, x_axis='time', y_axis='mel', sr=sr)
+    plt.colorbar(format="%+2.f dB")
+    fig.suptitle('Mel-frequency spectrogram')
+
+    image_name = "Mel log Spectrogram.png"
+    fig.savefig(image_name)
     plt.show()
 
     return
 
 
-# plot_mel_spectrogram()
+def plot_stft_spectrogram(audiofile):
+    y, sr = librosa.load(audiofile, sr=22050)
+
+    short_audio = librosa.stft(y, n_fft=1024, hop_length=256)
+    Y_audio = np.abs(short_audio) ** 2
+
+    # 2.2 convert amplitude values from linear to logarithmic scale
+    Y_log_audio = librosa.power_to_db(Y_audio)
+
+    fig = plt.figure(figsize=(10, 7))
+    librosa.display.specshow(Y_log_audio, sr=sr, hop_length=256, n_fft=1024, x_axis="time", y_axis="mel")
+    plt.colorbar(format="%+2.f dB")
+
+    fig.suptitle("STFT Spectrogram")
+    cmap = plt.get_cmap("magma")
+    plt.set_cmap(cmap)
+
+    image_name = "STFT Spectrogram.png"
+    fig.savefig(image_name)
+    plt.show()
+    return
+
+
+plot_mel_spectrogram("res/audio_4sec_centered/6902-2-0-4.wav")
+# plot_stft_spectrogram("res/audio_4sec_centered/6902-2-0-4.wav")
 
 
 def create4secWaveFiles(orginal_files, save_path):
@@ -315,7 +339,7 @@ def createCenteredWaveFiles(orginal_files, save_path, target_duration):
     return
 
 
-createCenteredWaveFiles("res/audio", "res/audio_3sec_centered", 3)
+# createCenteredWaveFiles("res/audio", "res/audio_3sec_centered", 3)
 
 def GetSubtypeOf(filename):
     ob = sf.SoundFile(filename)

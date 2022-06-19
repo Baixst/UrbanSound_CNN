@@ -61,8 +61,6 @@ def downsample_for_balanced_acc(predictions, true_labels, random_seed):
 
     prediction_tensor = tf.constant(new_preds)
     true_tensor = tf.constant(new_true_labels)
-    print(prediction_tensor)
-    print(true_tensor)
 
     return prediction_tensor, true_tensor
 

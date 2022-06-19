@@ -29,11 +29,7 @@ def CheckDurations(path):
 
 
 def plot_spectrogram(audioFileName, Y, samplerate, frame_size, hop_size, save_path, y_axis, save_image, show_plot, figure):
-    librosa.display.specshow(Y, sr=samplerate, hop_length=hop_size, x_axis="time", y_axis=y_axis)
-
-    # plt.colorbar(format="%+2.f dB")
-    # title = y_axis + "-scale Frequency, Frame Size = " + str(frame_size) + ", Hop Size = " + str(hop_size) + " | " + audioFileName
-    # fig.subtitle(title)
+    librosa.display.specshow(Y, sr=samplerate, n_fft=frame_size, hop_length=hop_size, x_axis="time", y_axis=y_axis)
 
     cmap = plt.get_cmap("gray")
     plt.set_cmap(cmap)
