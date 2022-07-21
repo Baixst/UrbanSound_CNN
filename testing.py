@@ -262,16 +262,17 @@ def plot_mfccs(audiofile):
 #                           fill_mode="duplicate")
 
 def plot_mel_spectrogram(audiofile):
-    y, sr = librosa.load(audiofile, sr=22050)
+    y, sr = librosa.load(audiofile, sr=44100)
+    print(sr)
 
-    S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, n_fft=1024, hop_length=256, power=2)
+    S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=100, n_fft=1024, hop_length=256, power=2)
     fig = plt.figure(figsize=(10, 7))
     S_dB = librosa.power_to_db(S, ref=np.max)
     img = librosa.display.specshow(S_dB, n_fft=1024, hop_length=256, x_axis='time', y_axis='mel', sr=sr)
     plt.colorbar(format="%+2.f dB")
-    fig.suptitle('Mel-frequency spectrogram')
+    fig.suptitle('Log-Mel-Spektrogramm (100 Mel-Filter)')
 
-    image_name = "Mel log Spectrogram.png"
+    image_name = "Mel log Spectrogram_3.png"
     fig.savefig(image_name)
     plt.show()
 
@@ -279,7 +280,8 @@ def plot_mel_spectrogram(audiofile):
 
 
 def plot_stft_spectrogram(audiofile):
-    y, sr = librosa.load(audiofile, sr=22050)
+    y, sr = librosa.load(audiofile, sr=44100)
+    print(sr)
 
     short_audio = librosa.stft(y, n_fft=1024, hop_length=256)
     Y_audio = np.abs(short_audio) ** 2
@@ -288,10 +290,10 @@ def plot_stft_spectrogram(audiofile):
     Y_log_audio = librosa.power_to_db(Y_audio)
 
     fig = plt.figure(figsize=(10, 7))
-    librosa.display.specshow(Y_log_audio, sr=sr, hop_length=256, n_fft=1024, x_axis="time", y_axis="mel")
+    librosa.display.specshow(Y_log_audio, sr=sr, hop_length=256, n_fft=1024, x_axis="time", y_axis="linear")
     plt.colorbar(format="%+2.f dB")
 
-    fig.suptitle("STFT Spectrogram")
+    fig.suptitle("Log-Spektrogramm")
     cmap = plt.get_cmap("magma")
     plt.set_cmap(cmap)
 
@@ -301,8 +303,8 @@ def plot_stft_spectrogram(audiofile):
     return
 
 
-plot_mel_spectrogram("res/audio_4sec_centered/6902-2-0-4.wav")
-# plot_stft_spectrogram("res/audio_4sec_centered/6902-2-0-4.wav")
+plot_mel_spectrogram("res/audio/24347-8-0-24.wav")
+plot_stft_spectrogram("res/audio/24347-8-0-24.wav")
 
 
 def create4secWaveFiles(orginal_files, save_path):
@@ -348,7 +350,8 @@ def GetSubtypeOf(filename):
     print('Subtype: {}'.format(ob.subtype))
     return
 
-# GetSubtypeOf("res/audio/100032-3-0-0.wav")
+
+GetSubtypeOf("res/audio/24347-8-0-24.wav")
 
 def AnalizeAudioFiles(save_path):
     subtypes = {
