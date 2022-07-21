@@ -18,7 +18,6 @@ import PIL
 from PIL import Image
 import pywt
 from pylab import *
-import soundfile as sf
 
 
 def GenerateArraysCrossVal(data_csv, img_path, px_x, px_y):
