@@ -10,8 +10,17 @@ def load_file_names(path):
 
 
 def split_csv(files, main_csv, train_csv, test_csv, train_percentage):
-    random.shuffle(files)
     total = len(files)
+    counter = 0
+
+    # files list will be compared to the main csv, which has the wav files listed
+    while counter < total:
+        string_list = files[counter].split(".")
+        new_file_name = string_list[0] + ".wav"
+        files[counter] = new_file_name
+        counter += 1
+
+    random.shuffle(files)
     train_total = int(total / 100 * train_percentage)
     train_files, test_files = [], []
     counter = 0
