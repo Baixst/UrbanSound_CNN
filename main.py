@@ -16,8 +16,8 @@ import loading as loader
 # config = wandb.config
 
 # Path Parameters
-AUDIO_PATH = "res/audio_4sec"
-IMAGE_PATH = "res/img_stft"
+AUDIO_PATH = "res/audio_3sec_centered2"
+IMAGE_PATH = "res/img_mel"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                              # main metadata csv from UrbandSound8K
 TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
@@ -27,9 +27,9 @@ DEF_FOLDS_PATH = "metadata/def_folds"                                   # path o
 create_spectrograms = False
 collect_dwt_data = False
 create_cwt_scalograms = False
-split_data = False
+split_data = True
 create_cross_val_csv = False
-build_and_train_STFT = True
+build_and_train_STFT = False
 build_and_train_DWT = False
 build_and_train_Raw_MaxPool = False
 
@@ -77,10 +77,10 @@ if create_cwt_scalograms:
 
 # SPLIT DATA
 if split_data:
-    files = split.load_file_names(AUDIO_PATH)
+    files = split.load_file_names(IMAGE_PATH)
     split.split_csv(files, METADATA_CSV, TRAIN_CSV, TEST_CSV, 80)
 if create_cross_val_csv:
-    files = split.load_file_names(AUDIO_PATH)
+    files = split.load_file_names(IMAGE_PATH)
     split.create_cross_val_csv(files, METADATA_CSV, CROSS_VAL_RANDOM_CSV)
 
 # TRAIN AND TEST MODEL
