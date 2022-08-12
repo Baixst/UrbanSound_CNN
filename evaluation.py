@@ -84,8 +84,6 @@ def plot_confusion_matrix(class_names, test_acc, predictions, true_labels):
     balanced_pred, balanced_true = downsample_for_balanced_acc(predictions, true_labels, random_seed=42069)
     balanced_acc = prediction_accuracy(balanced_pred, balanced_true)
 
-    print(true_labels)
-    print(predictions)
     print("----")
     print("Accuracy: " + str(round(test_acc, 3)))
     print("Balanced Accuracy: " + str(round(balanced_acc, 3)))

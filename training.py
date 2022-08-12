@@ -15,17 +15,17 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     """
 
     model = keras.Sequential()
-    model.add(keras.layers.Conv2D(128, (2, 2), input_shape=(img_size_x, img_size_y, 1)))
+    model.add(keras.layers.Conv2D(128, (3, 3), input_shape=(img_size_x, img_size_y, 1)))
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Dropout(0.1))
-    model.add(keras.layers.Conv2D(128, (2, 2), activation='relu'))
+    model.add(keras.layers.Conv2D(128, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Dropout(0.1))
-    model.add(keras.layers.Conv2D(256, (2, 2), activation='relu'))
+    model.add(keras.layers.Conv2D(128, (3, 3), activation='relu'))
 
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dense(128, activation='relu'))
+    model.add(keras.layers.Dense(64, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
 
     # TRAIN MODEL

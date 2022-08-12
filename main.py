@@ -16,8 +16,8 @@ import loading as loader
 # config = wandb.config
 
 # Path Parameters
-AUDIO_PATH = "res/audio_3sec_centered2"
-IMAGE_PATH = "res/img_mel"
+AUDIO_PATH = "res/audio_4sec_centered_44khz"
+IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                              # main metadata csv from UrbandSound8K
 TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
@@ -27,9 +27,9 @@ DEF_FOLDS_PATH = "metadata/def_folds"                                   # path o
 create_spectrograms = False
 collect_dwt_data = False
 create_cwt_scalograms = False
-split_data = True
+split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = False
+build_and_train_STFT = True
 build_and_train_DWT = False
 build_and_train_Raw_MaxPool = False
 
@@ -66,7 +66,8 @@ CLASS_NAMES = ['air_conditioner', 'car_horn', 'children_playing', 'dog_bark', 'd
 if create_spectrograms:
     pp.CreateSTFTSpectrograms(AUDIO_PATH, IMAGE_PATH, FrameSize=FRAME_SIZE, HopSize=HOP_SIZE, mels=MEL_BINS, duration=4,
                               freq_scale=SPEC_FREQ_SCALE, px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y, monitor_dpi=MY_DPI,
-                              spec_type=SPECTROGRAM_TYPE, fill_mode="duplicate")  # "centered", "none", "silence" or "duplicate"
+                              spec_type=SPECTROGRAM_TYPE, samplerate=44100,
+                              fill_mode="none")  # "centered", "none", "silence" or "duplicate"
 
 # use Wavelet Transform
 if collect_dwt_data:

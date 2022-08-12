@@ -260,7 +260,7 @@ def center_audiosignal(audio_array, sample_rate, target_duration):
 
 
 def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, mels, freq_scale, px_x, px_y, monitor_dpi,
-                           duration, spec_type, fill_mode="duplicate"):
+                           duration, spec_type, fill_mode="duplicate", samplerate=22050):
     utils.clear_directory(img_save_path)
     file_list = os.listdir(audio_path)
     amount_files = len(file_list)
@@ -274,7 +274,7 @@ def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, mels, 
     for file in file_list:
         file_path = audio_path + "/" + file
 
-        audioArray, sampleRate = librosa.load(file_path)
+        audioArray, sampleRate = librosa.load(file_path, sr=samplerate)
         if fill_mode == "duplicate":
             audioArray = DuplicateDataUntilDuration(audioArray, sampleRate, duration)
         elif fill_mode == "silence":

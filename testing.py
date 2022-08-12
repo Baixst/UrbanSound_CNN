@@ -303,8 +303,8 @@ def plot_stft_spectrogram(audiofile):
     return
 
 
-plot_mel_spectrogram("res/audio/24347-8-0-24.wav")
-plot_stft_spectrogram("res/audio/24347-8-0-24.wav")
+# plot_mel_spectrogram("res/audio/24347-8-0-24.wav")
+# plot_stft_spectrogram("res/audio/24347-8-0-24.wav")
 
 
 def create4secWaveFiles(orginal_files, save_path):
@@ -321,11 +321,11 @@ def create4secWaveFiles(orginal_files, save_path):
     return
 
 def createCenteredWaveFiles(orginal_files, save_path, target_duration):
-    samples_needed = target_duration * 22050
+    samples_needed = target_duration * 44100
     file_list = os.listdir(orginal_files)
 
     for file in file_list:
-        audio_array, sr = librosa.load(orginal_files + "/" + file)
+        audio_array, sr = librosa.load(orginal_files + "/" + file, sr=44100)
 
         if len(audio_array) > samples_needed:
             offset = int(len(audio_array) - samples_needed)
@@ -341,7 +341,7 @@ def createCenteredWaveFiles(orginal_files, save_path, target_duration):
     return
 
 
-# createCenteredWaveFiles("res/audio", "res/audio_3sec_centered", 3)
+createCenteredWaveFiles("res/audio", "res/audio_4sec_centered_44khz", 4)
 
 def GetSubtypeOf(filename):
     ob = sf.SoundFile(filename)
@@ -351,7 +351,7 @@ def GetSubtypeOf(filename):
     return
 
 
-GetSubtypeOf("res/audio/24347-8-0-24.wav")
+# GetSubtypeOf("res/audio/24347-8-0-24.wav")
 
 def AnalizeAudioFiles(save_path):
     subtypes = {
