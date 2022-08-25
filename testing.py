@@ -320,8 +320,8 @@ def create4secWaveFiles(orginal_files, save_path):
             sf.write(wav_file, audio_array, sr, 'PCM_24')
     return
 
-def createCenteredWaveFiles(orginal_files, save_path, target_duration):
-    samples_needed = target_duration * 44100
+def createCenteredWaveFiles(orginal_files, save_path, target_duration, samplerate):
+    samples_needed = target_duration * samplerate
     file_list = os.listdir(orginal_files)
 
     for file in file_list:
@@ -341,7 +341,30 @@ def createCenteredWaveFiles(orginal_files, save_path, target_duration):
     return
 
 
-createCenteredWaveFiles("res/audio", "res/audio_4sec_centered_44khz", 4)
+def createDuplicatedWaveFiles(orginal_files, save_path, target_duration, samplerate):
+    samples_needed = target_duration * samplerate
+    file_list = os.listdir(orginal_files)
+
+    for file in file_list:
+        audio_array, sr = librosa.load(orginal_files + "/" + file, sr=44100)
+
+        if len(audio_array) > samples_needed:
+            offset = int(len(audio_array) - samples_needed)
+            offset_front = int(offset / 2)
+            offset_end = samples_needed + offset_front
+            audio_array = audio_array[offset_front:offset_end]
+
+        else:
+            audio_array = preprocess.DuplicateDataUntilDuration(audio_array, sr, target_duration)
+
+        wav_file = save_path + "/" + file
+        sf.write(wav_file, audio_array, sr, 'PCM_24')
+    return
+
+
+# createCenteredWaveFiles("res/audio", "res/audio_3sec_centered_44khz", 3, 44100)
+# createDuplicatedWaveFiles("res/audio", "res/audio_3sec_duplicated_44khz", 3, 44100)
+
 
 def GetSubtypeOf(filename):
     ob = sf.SoundFile(filename)

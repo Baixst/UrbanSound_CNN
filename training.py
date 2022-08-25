@@ -15,12 +15,12 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     """
 
     model = keras.Sequential()
-    model.add(keras.layers.Conv2D(128, (3, 3), input_shape=(img_size_x, img_size_y, 1)))
+    model.add(keras.layers.Conv2D(64, (5, 5), input_shape=(img_size_x, img_size_y, 1),  padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Dropout(0.1))
+    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Conv2D(128, (3, 3), activation='relu'))
-    model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Dropout(0.1))
     model.add(keras.layers.Conv2D(128, (3, 3), activation='relu'))
 
     model.add(keras.layers.Flatten())
@@ -29,7 +29,8 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Dense(10, activation='softmax'))
 
     # TRAIN MODEL
-    model.compile(optimizer='adam',
+    optimizer = keras.optimizers.Adam(learning_rate=0.0005)
+    model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
 
