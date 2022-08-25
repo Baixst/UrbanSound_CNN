@@ -38,7 +38,7 @@ if gpus:
 
 # Path Parameters
 AUDIO_PATH = "res/audio"
-IMAGE_PATH = "res/img_3sec_cen_256x128_22khz"
+IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                              # main metadata csv from UrbandSound8K
 TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
@@ -64,7 +64,7 @@ CWT_FREQ_SCALES = 64
 CWT_WAVELET = "morl"
 
 # Image Parameters
-IMG_SIZE_X, IMG_SIZE_Y = 256, 128
+IMG_SIZE_X, IMG_SIZE_Y = 128, 128
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
