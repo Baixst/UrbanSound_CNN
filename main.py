@@ -1,13 +1,34 @@
+import os
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from sklearn.model_selection import KFold
+import os
 import preprocess as pp
 import evaluation as eva
 import splitdata as split
 import training as train
 import loading as loader
+
+# trying to solve out of memory error
+os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
+#  tf.config.experimental.set_visible_devices([], 'GPU')
+
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+  try:
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+    logical_gpus = tf.config.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
+
+
 # import wandb
 # from wandb.keras import WandbCallback
 
@@ -16,8 +37,8 @@ import loading as loader
 # config = wandb.config
 
 # Path Parameters
-AUDIO_PATH = "res/audio_4sec_centered_44khz"
-IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
+AUDIO_PATH = "res/audio"
+IMAGE_PATH = "res/img_3sec_cen_256x128_22khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                              # main metadata csv from UrbandSound8K
 TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
@@ -43,11 +64,11 @@ CWT_FREQ_SCALES = 64
 CWT_WAVELET = "morl"
 
 # Image Parameters
-IMG_SIZE_X, IMG_SIZE_Y = 128, 128
+IMG_SIZE_X, IMG_SIZE_Y = 256, 128
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 10  # config.get("epochs")
+TRAIN_EPOCHS = 15  # config.get("epochs")
 # VAL_SET_PERCENTAGE = 10
 # BATCH_SIZE = 0
 # TRAINING_RATE = 0
@@ -56,7 +77,7 @@ TRAIN_EPOCHS = 10  # config.get("epochs")
 # Evalutation Parameters
 USE_DEF_CROSS_VAL = False
 USE_RAND_CROSS_VAL = False
-CROSS_VAL_FOLDS = 3
+CROSS_VAL_FOLDS = 10
 
 CLASS_NAMES = ['air_conditioner', 'car_horn', 'children_playing', 'dog_bark', 'drilling', 'engine_idling',
                'gun_shot', 'jackhammer', 'siren', 'street_music']
@@ -81,7 +102,7 @@ if split_data:
     files = split.load_file_names(IMAGE_PATH)
     split.split_csv(files, METADATA_CSV, TRAIN_CSV, TEST_CSV, 80)
 if create_cross_val_csv:
-    files = split.load_file_names(IMAGE_PATH)
+    files = split.load_file_names(AUDIO_PATH)
     split.create_cross_val_csv(files, METADATA_CSV, CROSS_VAL_RANDOM_CSV)
 
 # TRAIN AND TEST MODEL
