@@ -111,13 +111,3 @@ def create_validation_dataset(data, labels, val_percentage):
     print("Using " + str(len(labels_val)) + " files for validation")
 
     return data_val, partial_data_train, labels_val, partial_labels_train
-
-
-def get_def_cross_val_arrays(index, csv_path, img_path, px_x, px_y):
-    data_csv = csv_path + "/train" + str(index) + ".csv"
-    X_train, y_train = pp.GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
-
-    data_csv = csv_path + "/test" + str(index) + ".csv"
-    X_test, y_test = pp.GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
-
-    return X_train, y_train, X_test, y_test

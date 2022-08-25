@@ -19,6 +19,15 @@ from PIL import Image
 import pywt
 from pylab import *
 
+def GenerateArraysDefCrossVal(index, csv_path, img_path, px_x, px_y):
+    data_csv = csv_path + "/train" + str(index) + ".csv"
+    X_train, y_train = GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
+
+    data_csv = csv_path + "/test" + str(index) + ".csv"
+    X_test, y_test = GenerateArraysCrossVal(data_csv, img_path, px_x, px_y)
+
+    return X_train, y_train, X_test, y_test
+
 
 def GenerateArraysCrossVal(data_csv, img_path, px_x, px_y):
     df = pd.read_csv(data_csv)

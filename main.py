@@ -12,9 +12,13 @@ import splitdata as split
 import training as train
 import loading as loader
 
+# Use CPU
+# tf.config.experimental.set_visible_devices([], 'GPU')
+
+
 # trying to solve out of memory error
+
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
-#  tf.config.experimental.set_visible_devices([], 'GPU')
 
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
@@ -38,9 +42,9 @@ if gpus:
 
 # Path Parameters
 AUDIO_PATH = "res/audio"
-IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
+IMAGE_PATH = "res/test"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                              # main metadata csv from UrbandSound8K
-TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
+TRAIN_CSV, TEST_CSV = "metadata/Trainfiles_test.csv", "metadata/Testfiles_test.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 
@@ -48,7 +52,7 @@ DEF_FOLDS_PATH = "metadata/def_folds"                                   # path o
 create_spectrograms = False
 collect_dwt_data = False
 create_cwt_scalograms = False
-split_data = False
+split_data = True
 create_cross_val_csv = False
 build_and_train_STFT = True
 build_and_train_DWT = False
@@ -113,8 +117,8 @@ if build_and_train_STFT:
             print("<--- TRAINING " + str(i) + "/" + str(10) + " --->")
 
             # Split data and get train and test dataset (image data and labels)
-            X_train, y_train, X_test, y_test = split.get_def_cross_val_arrays(index=i, csv_path=DEF_FOLDS_PATH,
-                                                                              img_path=IMAGE_PATH, px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y)
+            X_train, y_train, X_test, y_test = loader.GenerateArraysDefCrossVal(index=i, csv_path=DEF_FOLDS_PATH,
+                                                                img_path=IMAGE_PATH, px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y)
 
             # NORMALIZE pixel values to be between 0 and 1
             X_train, X_test = X_train / 255.0, X_test / 255.0
