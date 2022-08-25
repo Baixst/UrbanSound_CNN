@@ -325,7 +325,7 @@ def createCenteredWaveFiles(orginal_files, save_path, target_duration, samplerat
     file_list = os.listdir(orginal_files)
 
     for file in file_list:
-        audio_array, sr = librosa.load(orginal_files + "/" + file, sr=44100)
+        audio_array, sr = librosa.load(orginal_files + "/" + file, sr=samplerate)
 
         if len(audio_array) > samples_needed:
             offset = int(len(audio_array) - samples_needed)
@@ -364,7 +364,6 @@ def createDuplicatedWaveFiles(orginal_files, save_path, target_duration, sampler
 
 # createCenteredWaveFiles("res/audio", "res/audio_3sec_centered_44khz", 3, 44100)
 # createDuplicatedWaveFiles("res/audio", "res/audio_3sec_duplicated_44khz", 3, 44100)
-
 
 def GetSubtypeOf(filename):
     ob = sf.SoundFile(filename)
