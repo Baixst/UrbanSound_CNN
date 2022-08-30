@@ -2,7 +2,6 @@ import os
 import csv
 import random
 import pandas as pd
-import preprocess as pp
 
 def load_file_names(path):
     file_list = os.listdir(path)

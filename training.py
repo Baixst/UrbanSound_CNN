@@ -1,8 +1,5 @@
 import tensorflow as tf
 from tensorflow import keras
-from sklearn.model_selection import KFold
-import preprocess as pp
-import evaluation as eva
 
 def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, img_size_x, img_size_y):
     # CREATE MODEL CNN ARCHITECTURE

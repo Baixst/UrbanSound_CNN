@@ -1,21 +1,10 @@
-import os
 import shutil
 import csv
 import scipy
-import wavfile
 import statistics
-import soundfile as sf
-import numpy as np
-from numpy import asarray
 import librosa
-from scipy.interpolate import griddata
-from scipy import signal
 import utils
 import feature_extraction as feat
-from matplotlib import pyplot as plt
-import pandas as pd
-import PIL
-from PIL import Image
 import pywt
 from pylab import *
 import soundfile as sf
