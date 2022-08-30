@@ -17,7 +17,6 @@ import loading as loader
 
 
 # trying to solve out of memory error
-
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
 gpus = tf.config.list_physical_devices('GPU')
@@ -41,10 +40,10 @@ if gpus:
 # config = wandb.config
 
 # Path Parameters
-AUDIO_PATH = "res/audio"
-IMAGE_PATH = "res/test"
-METADATA_CSV = "metadata/UrbanSound8K.csv"                              # main metadata csv from UrbandSound8K
-TRAIN_CSV, TEST_CSV = "metadata/Trainfiles_test.csv", "metadata/Testfiles_test.csv"  # csv's for normal single training
+AUDIO_PATH = "res/audio"     # not used for training, only for preprocessing tasks
+IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
+METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
+TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 
@@ -52,7 +51,7 @@ DEF_FOLDS_PATH = "metadata/def_folds"                                   # path o
 create_spectrograms = False
 collect_dwt_data = False
 create_cwt_scalograms = False
-split_data = True
+split_data = False
 create_cross_val_csv = False
 build_and_train_STFT = True
 build_and_train_DWT = False
@@ -73,10 +72,7 @@ MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play
 
 # Training Parameters
 TRAIN_EPOCHS = 15  # config.get("epochs")
-# VAL_SET_PERCENTAGE = 10
 # BATCH_SIZE = 0
-# TRAINING_RATE = 0
-# DROPOUT_RATE = 0
 
 # Evalutation Parameters
 USE_DEF_CROSS_VAL = False
