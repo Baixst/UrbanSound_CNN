@@ -1,3 +1,4 @@
+import os
 import shutil
 import csv
 import scipy
@@ -257,7 +258,7 @@ def CreateSTFTSpectrograms(audio_path, img_save_path, FrameSize, HopSize, mels, 
     print("Generating " + str(amount_files) + " Spectrograms")
 
     # set output image size
-    x_offset = 0  # needed because matplotlib is weird, play around with value until it works
+    x_offset = 0.2  # needed because matplotlib is weird, play around with value until it works
     fig = plt.figure(figsize=(px_x / (monitor_dpi + x_offset), px_y / monitor_dpi))
 
     for file in file_list:

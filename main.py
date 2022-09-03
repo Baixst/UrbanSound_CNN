@@ -11,8 +11,9 @@ import loading as loader
 # Use CPU
 # tf.config.experimental.set_visible_devices([], 'GPU')
 
-
+'''
 # trying to solve out of memory error
+
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
 gpus = tf.config.list_physical_devices('GPU')
@@ -26,7 +27,7 @@ if gpus:
   except RuntimeError as e:
     # Memory growth must be set before GPUs have been initialized
     print(e)
-
+'''
 
 # import wandb
 # from wandb.keras import WandbCallback
@@ -37,9 +38,9 @@ if gpus:
 
 # Path Parameters
 AUDIO_PATH = "res/audio"     # not used for training, only for preprocessing tasks
-IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
+IMAGE_PATH = "res/test2"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
-TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
+TRAIN_CSV, TEST_CSV = "metadata/Trainfiles_test.csv", "metadata/Testfiles_test.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 
@@ -50,6 +51,7 @@ create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
 build_and_train_STFT = True
+stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
 build_and_train_DWT = False
 build_and_train_Raw_MaxPool = False
 
@@ -67,13 +69,13 @@ IMG_SIZE_X, IMG_SIZE_Y = 128, 128
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 15  # config.get("epochs")
+TRAIN_EPOCHS = 2  # config.get("epochs")
 # BATCH_SIZE = 0
 
 # Evalutation Parameters
 USE_DEF_CROSS_VAL = False
-USE_RAND_CROSS_VAL = False
-CROSS_VAL_FOLDS = 10
+USE_RAND_CROSS_VAL = True
+CROSS_VAL_FOLDS = 4
 
 CLASS_NAMES = ['air_conditioner', 'car_horn', 'children_playing', 'dog_bark', 'drilling', 'engine_idling',
                'gun_shot', 'jackhammer', 'siren', 'street_music']
@@ -98,7 +100,7 @@ if split_data:
     files = split.load_file_names(IMAGE_PATH)
     split.split_csv(files, METADATA_CSV, TRAIN_CSV, TEST_CSV, 80)
 if create_cross_val_csv:
-    files = split.load_file_names(AUDIO_PATH)
+    files = split.load_file_names(IMAGE_PATH)
     split.create_cross_val_csv(files, METADATA_CSV, CROSS_VAL_RANDOM_CSV)
 
 # TRAIN AND TEST MODEL
@@ -116,26 +118,32 @@ if build_and_train_STFT:
             X_train, X_test = X_train / 255.0, X_test / 255.0
 
             # Train Model
-            model, history = train.Build_Train_CNN2D(X_train, y_train, X_test, y_test, epochs=TRAIN_EPOCHS,
+            if stft_model_to_use == "ResNet":
+                # Auf von (-1, px_x, px_y, 1) auf (-1, px_x, px_y, 3) Tensor erhöhen
+                X_train = tf.repeat(X_train, 3, axis=3)
+                X_test = tf.repeat(X_test, 3, axis=3)
+                model, history = train.Build_Train_ResNet50(X_train, y_train, X_test, y_test, epochs=TRAIN_EPOCHS)
+
+            if stft_model_to_use == "default":
+                model, history = train.Build_Train_CNN2D(X_train, y_train, X_test, y_test, epochs=TRAIN_EPOCHS,
                                     img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y)
 
             # Collect evaluation data
             test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
             if i == 1:
-                models, histories, acc, loss = [model], [history], [test_acc], [test_loss]
+                histories, acc, loss = [history], [test_acc], [test_loss]
             else:
-                models.append(model)
                 histories.append(history)
                 acc.append(test_acc)
                 loss.append(test_loss)
 
             # Preperation for Confusion Matrix:
             if i == 0:
-                all_pred = models[i].predict(X_test)
+                all_pred = model.predict(X_test)
                 all_pred = tf.argmax(all_pred, axis=-1)
                 all_test_labels = y_test
             else:
-                tmp_pred = models[i].predict(X_test)
+                tmp_pred = model.predict(X_test)
                 tmp_pred = tf.argmax(tmp_pred, axis=-1)
                 tmp_test_labels = y_test
 
@@ -163,26 +171,32 @@ if build_and_train_STFT:
             # X_val, part_X_train, y_val, part_y_train = split.create_validation_dataset(X_train, y_train, VAL_SET_PERCENTAGE)
 
             # Train Model
-            model, history = train.Build_Train_CNN2D(X_train, y_train, X_test, y_test, epochs=TRAIN_EPOCHS,
-                                    img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y)
+            if stft_model_to_use == "default":
+                model, history = train.Build_Train_CNN2D(X_train, y_train, X_test, y_test, epochs=TRAIN_EPOCHS,
+                                                         img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y)
+
+            if stft_model_to_use == "ResNet":
+                # Auf von (-1, px_x, px_y, 1) auf (-1, px_x, px_y, 3) Tensor erhöhen
+                X_train = tf.repeat(X_train, 3, axis=3)
+                X_test = tf.repeat(X_test, 3, axis=3)
+                model, history = train.Build_Train_ResNet50(X_train, y_train, X_test, y_test, epochs=TRAIN_EPOCHS)
 
             # Collect evaluation data
             test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
             if counter == 0:
-                models, histories, acc, loss = [model], [history], [test_acc], [test_loss]
+                histories, acc, loss = [history], [test_acc], [test_loss]
             else:
-                models.append(model)
                 histories.append(history)
                 acc.append(test_acc)
                 loss.append(test_loss)
 
             # Preperation for Confusion Matrix:
             if counter == 0:
-                all_pred = models[counter].predict(X_test)
+                all_pred = model.predict(X_test)
                 all_pred = tf.argmax(all_pred, axis=-1)
                 all_test_labels = y_test
             else:
-                tmp_pred = models[counter].predict(X_test)
+                tmp_pred = model.predict(X_test)
                 tmp_pred = tf.argmax(tmp_pred, axis=-1)
                 tmp_test_labels = y_test
 
@@ -210,8 +224,17 @@ if build_and_train_STFT:
         #                                                                          trainLabels, VAL_SET_PERCENTAGE)
 
         print("<--- TRAINING 1/1 ---")
-        model, history = train.Build_Train_CNN2D(trainImages, trainLabels, testImages, testLabels, epochs=TRAIN_EPOCHS,
-                                img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y)
+        # Train Model
+        if stft_model_to_use == "default":
+            model, history = train.Build_Train_CNN2D(trainImages, trainLabels, testImages, testLabels,
+                                                     epochs=TRAIN_EPOCHS, img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y)
+
+        if stft_model_to_use == "ResNet":
+            # Auf von (-1, px_x, px_y, 1) auf (-1, px_x, px_y, 3) Tensor erhöhen
+            trainImages = tf.repeat(trainImages, 3, axis=3)
+            testImages = tf.repeat(testImages, 3, axis=3)
+
+            model, history = train.Build_Train_ResNet50(trainImages, trainLabels, testImages, testLabels, epochs=TRAIN_EPOCHS)
 
         histories = [history]
 

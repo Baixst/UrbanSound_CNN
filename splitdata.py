@@ -80,7 +80,9 @@ def create_cross_val_csv(files, main_csv, result_csv):
 
     df = pd.read_csv(main_csv)
     for index, row in df.iterrows():
-        if row["slice_file_name"] in files:
+        string_list = row["slice_file_name"].split(".")
+        file_name = string_list[0] + ".png"
+        if file_name in files:
             values = [row["slice_file_name"], row["classID"]]
             writer.writerow(values)
     resultCSV.close()

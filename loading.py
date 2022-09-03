@@ -1,3 +1,4 @@
+import os
 import librosa
 import utils
 import pandas as pd
@@ -25,6 +26,7 @@ def GenerateArraysCrossVal(data_csv, img_path, px_x, px_y):
 
 def GenerateArrays_STFT(train_csv, test_csv, img_path, px_x, px_y):
     df_train = pd.read_csv(train_csv)
+    print(df_train)
     df_test = pd.read_csv(test_csv)
     file_list = os.listdir(img_path)
 
@@ -100,7 +102,7 @@ def GenerateLabelArray(dataframe):
 
 def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y):
     amount_files = len(dataframe.index)
-    print("collecting data from " + str(amount_files) + " images" )
+    print("collecting data from " + str(amount_files) + " images")
 
     files_added = 0
     arr = np.array([[[]]])
@@ -118,6 +120,7 @@ def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y):
             utils.progress_bar(current=files_added, total=amount_files)
 
     arr = arr.reshape(-1, px_x, px_y, 1)
+    print()
     return arr
 
 

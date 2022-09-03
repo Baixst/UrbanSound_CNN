@@ -217,6 +217,6 @@ def plot_accuracy_over_epochs(acc_arr, val_acc_arr):
     plt.ylabel('Accucary')
     plt.legend()
 
-    fig.savefig("results/AccurayPlot.png", bbox_inches='tight')
+    fig.savefig("results/AccuracyPlot.png", bbox_inches='tight')
     plt.show()
     return
