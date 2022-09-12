@@ -24,9 +24,16 @@ def GenerateArraysCrossVal(data_csv, img_path, px_x, px_y):
     return image_data, labels
 
 
+def GenerateArraysDefCross_DWT(index, csv_path, feature_csv):
+    train_csv = csv_path + "/train" + str(index) + ".csv"
+    test_csv = csv_path + "/test" + str(index) + ".csv"
+
+    train_feats, train_labels, test_feats, test_labels = GenerateArrays_DWT(train_csv, test_csv, feature_csv)
+    return train_feats, train_labels, test_feats, test_labels
+
+
 def GenerateArrays_STFT(train_csv, test_csv, img_path, px_x, px_y):
     df_train = pd.read_csv(train_csv)
-    print(df_train)
     df_test = pd.read_csv(test_csv)
     file_list = os.listdir(img_path)
 
@@ -58,15 +65,15 @@ def GenerateArrays_DWT(train_csv, test_csv, features_csv):
     test_labels = GenerateLabelArray(df_test)
 
     print("Generating train feature data matrix...")
-    train_images = GenerateFeaturesArray(df_train, df_features)
+    train_feats = GenerateFeaturesArray(df_train, df_features)
     print("Generating test feature data matrix...")
-    test_images = GenerateFeaturesArray(df_test, df_features)
+    test_feats = GenerateFeaturesArray(df_test, df_features)
 
     print("Train labels shape: " + str(train_labels.shape))
-    print("Train features shape: " + str(train_images.shape))
+    print("Train features shape: " + str(train_feats.shape))
     print("Test labels shape: " + str(test_labels.shape))
-    print("Test features shape: " + str(test_images.shape))
-    return train_images, train_labels, test_images, test_labels
+    print("Test features shape: " + str(test_feats.shape))
+    return train_feats, train_labels, test_feats, test_labels
 
 
 def GenerateArrays_Raw(train_csv, test_csv, audio_path, duration, sr):
@@ -105,7 +112,10 @@ def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y):
     print("collecting data from " + str(amount_files) + " images")
 
     files_added = 0
-    arr = np.array([[[]]])
+    full_arr = np.array([[[]]])
+    temp_counter = 0
+    temp_cap = 250
+    temp_arr = np.array([])
     for index, row in dataframe.iterrows():
         string_list = row["slice_file_name"].split(".")
         img_name = string_list[0] + ".png"
@@ -113,15 +123,24 @@ def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y):
         if img_name in file_list:
             img_name = img_path + "/" + img_name
             image = Image.open(img_name).convert("L")
-            data = asarray(image)
-            arr = np.append(arr, data)
+            temp_arr = np.append(temp_arr, asarray(image))
+
+            if temp_counter < temp_cap:
+                temp_counter += 1
+            else:
+                full_arr = np.append(full_arr, temp_arr)
+                temp_arr = np.array([])
+                temp_counter = 0
 
             files_added += 1
             utils.progress_bar(current=files_added, total=amount_files)
 
-    arr = arr.reshape(-1, px_x, px_y, 1)
+    full_arr = np.append(full_arr, temp_arr)
+    del temp_arr
+
+    full_arr = full_arr.reshape(-1, px_x, px_y, 1)
     print()
-    return arr
+    return full_arr
 
 
 def GenerateFeaturesArray(df_file_and_label, df_features):

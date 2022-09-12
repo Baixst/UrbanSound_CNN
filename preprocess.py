@@ -59,7 +59,7 @@ def CreateCWTScaleograms(audio_path, img_save_path, freq_scales, wavelet, px_x, 
     return
 
 
-def dwt_feature_extraction(audio_path, dwt_feature_csv):
+def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate):
     """
     Extract Detail Coeffs, build features from them and write results to csv file
     """
@@ -79,7 +79,7 @@ def dwt_feature_extraction(audio_path, dwt_feature_csv):
         csvHeader.append("iqr_" + str(i))
         csvHeader.append("skew_" + str(i))
         csvHeader.append("kurtosis_" + str(i))
-        csvHeader.append("standard_error_mean" + str(i))
+        csvHeader.append("standard_error_mean_" + str(i))
         csvHeader.append("median_abs_deviation_" + str(i))
     data_writer.writerow(csvHeader)
 
@@ -87,11 +87,11 @@ def dwt_feature_extraction(audio_path, dwt_feature_csv):
         file_path = audio_path + "/" + file
 
         # 1. Read Audio file
-        data, samplerate = librosa.load(file_path)
+        data, samplerate = librosa.load(file_path, sr=44100)
         # data = data / max(data)
-        data = data[0:32768]
+        data = data[33382:98918]  # results in center 131.072 samples of 3 sec clip
         wavelet = "db1"
-        max_level = pywt.dwt_max_level(len(data), wavelet) - 1
+        max_level = pywt.dwt_max_level(len(data), wavelet) - 2
 
         coeffs = pywt.wavedec(data, wavelet, level=max_level, mode="symmetric")
         line = [file]
@@ -147,7 +147,7 @@ def collect_all_DWT_data(audio_path, dwt_full_data_csv):
         # 1. Read Audio file
         data, samplerate = librosa.load(audio_file)
         # data = data / max(data)
-        data = data[0:32768]
+        data = data[0:131072]  # close to 3 seconds for 44khz samplerate
 
         wavelet = "db1"
         max_level = pywt.dwt_max_level(len(data), wavelet)

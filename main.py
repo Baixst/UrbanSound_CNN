@@ -37,21 +37,22 @@ if gpus:
 # config = wandb.config
 
 # Path Parameters
-AUDIO_PATH = "res/audio"     # not used for training, only for preprocessing tasks
-IMAGE_PATH = "res/test2"
+AUDIO_PATH = "res/audio_3sec_centered_44khz"     # not used for training, only for preprocessing tasks
+IMAGE_PATH = "res/img_4sec_cen_224x224_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
-TRAIN_CSV, TEST_CSV = "metadata/Trainfiles_test.csv", "metadata/Testfiles_test.csv"  # csv's for normal single training
+DWT_FEATURES_CSV = "res/dwt_features.csv"                                  # dwt features for training dense net
+TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 
 # Script Tasks
 create_spectrograms = False
-collect_dwt_data = False
+collect_dwt_data = True
 create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = True
-stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
+build_and_train_STFT = False
+stft_model_to_use = "ResNet"         # "default", "ResNet", "own_ResNet" is possible
 build_and_train_DWT = False
 build_and_train_Raw_MaxPool = False
 
@@ -65,16 +66,16 @@ CWT_FREQ_SCALES = 64
 CWT_WAVELET = "morl"
 
 # Image Parameters
-IMG_SIZE_X, IMG_SIZE_Y = 128, 128
+IMG_SIZE_X, IMG_SIZE_Y = 224, 224
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 2  # config.get("epochs")
+TRAIN_EPOCHS = 300  # config.get("epochs")
 # BATCH_SIZE = 0
 
 # Evalutation Parameters
 USE_DEF_CROSS_VAL = False
-USE_RAND_CROSS_VAL = True
+USE_RAND_CROSS_VAL = False
 CROSS_VAL_FOLDS = 4
 
 CLASS_NAMES = ['air_conditioner', 'car_horn', 'children_playing', 'dog_bark', 'drilling', 'engine_idling',
@@ -90,7 +91,7 @@ if create_spectrograms:
 
 # use Wavelet Transform
 if collect_dwt_data:
-    pp.dwt_feature_extraction(AUDIO_PATH, "res/dwt_features.csv")
+    pp.dwt_feature_extraction(AUDIO_PATH, "res/dwt_features.csv", 44100)
 if create_cwt_scalograms:
     pp.CreateCWTScaleograms(AUDIO_PATH, IMAGE_PATH, freq_scales=CWT_FREQ_SCALES, wavelet=CWT_WAVELET,
                             px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y, monitor_dpi=MY_DPI, fill_mode="centered")
@@ -138,7 +139,7 @@ if build_and_train_STFT:
                 loss.append(test_loss)
 
             # Preperation for Confusion Matrix:
-            if i == 0:
+            if i == 1:
                 all_pred = model.predict(X_test)
                 all_pred = tf.argmax(all_pred, axis=-1)
                 all_test_labels = y_test
@@ -248,23 +249,60 @@ if build_and_train_STFT:
     # run.finish()
 
 if build_and_train_DWT:
-    # LOAD DATASET
-    trainFeat, trainLabels, testFeat, testLabels = loader.GenerateArrays_DWT(TRAIN_CSV, TEST_CSV,
-                                                                                  "res/dwt_features.csv")
-    print("Finished Loading Data")
+    if USE_DEF_CROSS_VAL:
+        for i in range(1, 11):
+            print("<--- TRAINING " + str(i) + "/" + str(10) + " --->")
 
-    print("<--- TRAINING 1/1 ---")
-    model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
-                                             amount_features=126)
+            # Split data and get train and test dataset (features and labels)
+            trainFeat, trainLabels, testFeat, testLabels = loader.GenerateArraysDefCross_DWT(index=i,
+                                                                csv_path=DEF_FOLDS_PATH, feature_csv=DWT_FEATURES_CSV)
 
-    histories = [history]
+            # Build and train model
+            model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
+                                                     amount_features=126)
 
-    # EVALUATE MODEL
-    print("------------------- \nHistory:")
-    eva.evaluate_epochs(histories)
-    print("---------------------------- \nEvaluation of Model:")
-    test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)
-    eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testFeat, testLabels)
+            # Collect evaluation data
+            test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)
+            if i == 1:
+                histories, acc, loss = [history], [test_acc], [test_loss]
+            else:
+                histories.append(history)
+                acc.append(test_acc)
+                loss.append(test_loss)
+
+            # Preperation for Confusion Matrix:
+            if i == 1:
+                all_pred = model.predict(testFeat)
+                all_pred = tf.argmax(all_pred, axis=-1)
+                all_test_labels = testLabels
+            else:
+                tmp_pred = model.predict(testFeat)
+                tmp_pred = tf.argmax(tmp_pred, axis=-1)
+                tmp_test_labels = testLabels
+
+                all_pred = tf.concat([all_pred, tmp_pred], 0)
+                all_test_labels = np.concatenate((all_test_labels, tmp_test_labels))
+
+        # EVALUATE MODEL
+        eva.EvaluteCrossValidation(histories, acc, loss, all_pred, all_test_labels, CLASS_NAMES)
+
+    else:
+        # LOAD DATASET
+        trainFeat, trainLabels, testFeat, testLabels = loader.GenerateArrays_DWT(TRAIN_CSV, TEST_CSV, DWT_FEATURES_CSV)
+        print("Finished Loading Data")
+
+        print("<--- TRAINING 1/1 ---")
+        model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
+                                             amount_features=135)
+
+        histories = [history]
+
+        # EVALUATE MODEL
+        print("------------------- \nHistory:")
+        eva.evaluate_epochs(histories)
+        print("---------------------------- \nEvaluation of Model:")
+        test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)
+        eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testFeat, testLabels)
 
 if build_and_train_Raw_MaxPool:
     # LOAD DATASET
