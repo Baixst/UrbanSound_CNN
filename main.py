@@ -37,10 +37,10 @@ if gpus:
 # config = wandb.config
 
 # Path Parameters
-AUDIO_PATH = "res/audio_3sec_centered_44khz"     # not used for training, only for preprocessing tasks
+AUDIO_PATH = "res/audio_3sec_duplicated_22khz"     # not used for training, only for preprocessing tasks
 IMAGE_PATH = "res/img_4sec_cen_224x224_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
-DWT_FEATURES_CSV = "res/dwt_features.csv"                                  # dwt features for training dense net
+DWT_FEATURES_CSV = "res/dwt_features_3sec_dup_22khz.csv"                                  # dwt features for training dense net
 TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
@@ -91,7 +91,7 @@ if create_spectrograms:
 
 # use Wavelet Transform
 if collect_dwt_data:
-    pp.dwt_feature_extraction(AUDIO_PATH, "res/dwt_features.csv", 44100)
+    pp.dwt_feature_extraction(AUDIO_PATH, DWT_FEATURES_CSV, 22050)
 if create_cwt_scalograms:
     pp.CreateCWTScaleograms(AUDIO_PATH, IMAGE_PATH, freq_scales=CWT_FREQ_SCALES, wavelet=CWT_WAVELET,
                             px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y, monitor_dpi=MY_DPI, fill_mode="centered")

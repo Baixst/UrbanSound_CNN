@@ -199,6 +199,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\res\dwt_features_3sec_dup_22khz.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

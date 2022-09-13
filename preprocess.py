@@ -87,9 +87,9 @@ def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate):
         file_path = audio_path + "/" + file
 
         # 1. Read Audio file
-        data, samplerate = librosa.load(file_path, sr=44100)
+        data, samplerate = librosa.load(file_path, sr=samplerate)
         # data = data / max(data)
-        data = data[33382:98918]  # results in center 131.072 samples of 3 sec clip
+        data = data[0:65536]  # results in center 131.072 samples of 3 sec clip
         wavelet = "db1"
         max_level = pywt.dwt_max_level(len(data), wavelet) - 2
 
