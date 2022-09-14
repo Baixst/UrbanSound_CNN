@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
+import datetime
 
 def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, img_size_x, img_size_y):
     print("TRAINING OWN DEFAULT CNN")
@@ -73,8 +74,13 @@ def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epoch
 
     head_model.summary()
 
+    startTime = datetime.datetime.now()
+
     history = head_model.fit(train_data, train_labels, epochs=epochs,
                         validation_data=(test_data, test_labels))  # ,callbacks=[WandbCallback()]
+
+    trainingTime = datetime.datetime.now() - startTime
+    print("Time until training finished: " + str(trainingTime))
 
     return head_model, history
 
