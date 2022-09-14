@@ -215,6 +215,7 @@ def plot_accuracy_over_epochs(acc_arr, val_acc_arr):
     plt.title('Training and validation accuracy')
     plt.xlabel('Epochs')
     plt.ylabel('Accucary')
+    plt.ylim([0, 1])
     plt.legend()
 
     fig.savefig("results/AccuracyPlot.png", bbox_inches='tight')

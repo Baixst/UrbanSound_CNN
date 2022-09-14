@@ -37,21 +37,21 @@ if gpus:
 # config = wandb.config
 
 # Path Parameters
-AUDIO_PATH = "res/audio_3sec_duplicated_22khz"     # not used for training, only for preprocessing tasks
+AUDIO_PATH = "res/audio_3sec_duplicated_44khz"                  # not used for training, only for preprocessing tasks
 IMAGE_PATH = "res/img_4sec_cen_224x224_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
-DWT_FEATURES_CSV = "res/dwt_features_3sec_dup_22khz.csv"                                  # dwt features for training dense net
+DWT_FEATURES_CSV = "res/dwt_features_3sec_dup_44khz.csv"                   # dwt features for training dense net
 TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 
 # Script Tasks
 create_spectrograms = False
-collect_dwt_data = True
+collect_dwt_data = False
 create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = False
+build_and_train_STFT = True
 stft_model_to_use = "ResNet"         # "default", "ResNet", "own_ResNet" is possible
 build_and_train_DWT = False
 build_and_train_Raw_MaxPool = False
@@ -70,7 +70,7 @@ IMG_SIZE_X, IMG_SIZE_Y = 224, 224
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 300  # config.get("epochs")
+TRAIN_EPOCHS = 15  # config.get("epochs")
 # BATCH_SIZE = 0
 
 # Evalutation Parameters
@@ -91,7 +91,7 @@ if create_spectrograms:
 
 # use Wavelet Transform
 if collect_dwt_data:
-    pp.dwt_feature_extraction(AUDIO_PATH, DWT_FEATURES_CSV, 22050)
+    pp.dwt_feature_extraction(AUDIO_PATH, DWT_FEATURES_CSV, 44100)
 if create_cwt_scalograms:
     pp.CreateCWTScaleograms(AUDIO_PATH, IMAGE_PATH, freq_scales=CWT_FREQ_SCALES, wavelet=CWT_WAVELET,
                             px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y, monitor_dpi=MY_DPI, fill_mode="centered")
@@ -120,7 +120,7 @@ if build_and_train_STFT:
 
             # Train Model
             if stft_model_to_use == "ResNet":
-                # Auf von (-1, px_x, px_y, 1) auf (-1, px_x, px_y, 3) Tensor erhöhen
+                # von (-1, px_x, px_y, 1) auf (-1, px_x, px_y, 3) Tensor erhöhen
                 X_train = tf.repeat(X_train, 3, axis=3)
                 X_test = tf.repeat(X_test, 3, axis=3)
                 model, history = train.Build_Train_ResNet50(X_train, y_train, X_test, y_test, epochs=TRAIN_EPOCHS)
@@ -259,7 +259,7 @@ if build_and_train_DWT:
 
             # Build and train model
             model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
-                                                     amount_features=126)
+                                                     amount_features=135)
 
             # Collect evaluation data
             test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)

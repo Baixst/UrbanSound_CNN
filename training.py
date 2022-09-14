@@ -55,14 +55,14 @@ def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epoch
     # TODO: Checken ob Batch-Norm Layer auf gefroren sind
 
     # Load ResNet and freeze all layers
-    base_model = keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+    base_model = keras.applications.ResNet50V2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
     for layer in base_model.layers:
         if 'BatchNormalization' not in layer.__class__.__name__:
             layer.trainable = False
 
     # add own dense layers for classification
-    x = keras.layers.Flatten()(base_model.output)
-    x = keras.layers.Dense(1000, activation='relu')(x)
+    x = keras.layers.GlobalAveragePooling2D()(base_model.output)
+    # x = keras.layers.Dense(1000, activation='relu')(x)
     predictions = keras.layers.Dense(10, activation='softmax')(x)
 
     head_model = keras.Model(inputs=base_model.input, outputs=predictions)
@@ -71,7 +71,7 @@ def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epoch
                        loss=keras.losses.sparse_categorical_crossentropy,
                        metrics=['accuracy'])
 
-    print(head_model.summary)
+    head_model.summary()
 
     history = head_model.fit(train_data, train_labels, epochs=epochs,
                         validation_data=(test_data, test_labels))  # ,callbacks=[WandbCallback()]
@@ -113,7 +113,7 @@ def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, 
     # CREATE MODEL CNN ARCHITECTURE
     model = keras.Sequential()
     model.add(keras.layers.Dense(amount_features, activation='sigmoid', input_shape=(amount_features,)))
-    model.add(keras.layers.Dense(150, activation='relu'))
+    model.add(keras.layers.Dense(110, activation='relu'))
     model.add(keras.layers.Dropout(0.2))
     model.add(keras.layers.Dense(60, activation='relu'))
     model.add(keras.layers.Dropout(0.2))
@@ -121,7 +121,7 @@ def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Dense(10, activation='softmax'))
 
     # TRAIN MODEL
-    optimizer = keras.optimizers.Adam(learning_rate=0.0005)
+    optimizer = keras.optimizers.Adam(learning_rate=0.0002)
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])

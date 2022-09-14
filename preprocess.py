@@ -71,7 +71,7 @@ def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate):
     data_writer = csv.writer(dataCSV)
     csvHeader = ["audio_file"]
     # write first csv line
-    for i in range(1, 15):  # second parameter is dwt max level+1
+    for i in range(1, 17):  # second parameter is dwt max level+1
         csvHeader.append("entropie_" + str(i))
         csvHeader.append("mean_" + str(i))
         csvHeader.append("variance_" + str(i))
@@ -87,19 +87,14 @@ def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate):
         file_path = audio_path + "/" + file
 
         # 1. Read Audio file
-        data, samplerate = librosa.load(file_path, sr=samplerate)
+        data, sr = librosa.load(file_path, sr=samplerate)
         # data = data / max(data)
-        data = data[0:65536]  # results in center 131.072 samples of 3 sec clip
+        data = data[0:131072]  # results in center 131.072 samples of 3 sec clip
         wavelet = "db1"
-        max_level = pywt.dwt_max_level(len(data), wavelet) - 2
+        max_level = pywt.dwt_max_level(len(data), wavelet) - 1
 
         coeffs = pywt.wavedec(data, wavelet, level=max_level, mode="symmetric")
         line = [file]
-
-        MAX_median_abs_dev = 0
-        MAX_standard_error_mean = 0
-        MAX_iqr = 0
-        MAX_variation = 0
 
         # Calculate Features
         for i in range(1, len(coeffs)):
