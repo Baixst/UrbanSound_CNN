@@ -38,7 +38,7 @@ if gpus:
 
 # Path Parameters
 AUDIO_PATH = "res/audio_3sec_duplicated_44khz"                  # not used for training, only for preprocessing tasks
-IMAGE_PATH = "res/img_4sec_cen_224x224_44khz"
+IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
 DWT_FEATURES_CSV = "res/dwt_features_3sec_dup_44khz.csv"                   # dwt features for training dense net
 TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
@@ -52,7 +52,7 @@ create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
 build_and_train_STFT = True
-stft_model_to_use = "ResNet"         # "default", "ResNet", "own_ResNet" is possible
+stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
 build_and_train_DWT = False
 build_and_train_Raw_MaxPool = False
 
@@ -66,15 +66,15 @@ CWT_FREQ_SCALES = 64
 CWT_WAVELET = "morl"
 
 # Image Parameters
-IMG_SIZE_X, IMG_SIZE_Y = 224, 224
+IMG_SIZE_X, IMG_SIZE_Y = 128, 128
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 15  # config.get("epochs")
+TRAIN_EPOCHS = 2  # config.get("epochs")
 # BATCH_SIZE = 0
 
 # Evalutation Parameters
-USE_DEF_CROSS_VAL = False
+USE_DEF_CROSS_VAL = True
 USE_RAND_CROSS_VAL = False
 CROSS_VAL_FOLDS = 4
 
@@ -154,7 +154,7 @@ if build_and_train_STFT:
         # EVALUATE MODEL
         eva.EvaluteCrossValidation(histories, acc, loss, all_pred, all_test_labels, CLASS_NAMES)
 
-    if USE_RAND_CROSS_VAL:
+    elif USE_RAND_CROSS_VAL:
         X, y = loader.GenerateArraysCrossVal(CROSS_VAL_RANDOM_CSV, IMAGE_PATH, IMG_SIZE_X, IMG_SIZE_Y)
         # NORMALIZE pixel values to be between 0 and 1
         X = X / 255.0

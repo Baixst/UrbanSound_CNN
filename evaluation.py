@@ -155,6 +155,8 @@ def evaluate_epochs(histories):
 
     write_results_to_csv(all_loss_arr, all_acc_arr, all_val_loss_arr, all_val_acc_arr)
     plot_accuracy_over_epochs(all_acc_arr, all_val_acc_arr)
+    plot_loss_over_epochs(all_loss_arr, all_val_loss_arr)
+
     return
 
 
@@ -219,5 +221,21 @@ def plot_accuracy_over_epochs(acc_arr, val_acc_arr):
     plt.legend()
 
     fig.savefig("results/AccuracyPlot.png", bbox_inches='tight')
+    plt.show()
+    return
+
+
+def plot_loss_over_epochs(loss_arr, val_loss_arr):
+    epochs = range(1, len(loss_arr) + 1)
+    fig = plt.figure(figsize=(10, 7))
+
+    plt.plot(epochs, loss_arr, color='blue', label='Training acc')
+    plt.plot(epochs, val_loss_arr, color='#FFA359', label='Validation acc')  # Hexcode for orange
+    plt.title('Training and validation loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    fig.savefig("results/LossPlot.png", bbox_inches='tight')
     plt.show()
     return

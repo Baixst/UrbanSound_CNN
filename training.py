@@ -33,10 +33,13 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(256, activation='relu'))
+    # model.add(keras.layers.Flatten())
+    model.add(keras.layers.GlobalAveragePooling2D())
+    # model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dense(64, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
+
+    model.summary()
 
     # TRAIN MODEL
     optimizer = keras.optimizers.Adam(learning_rate=0.0005)
@@ -44,16 +47,19 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
 
+    startTime = datetime.datetime.now()
+
     history = model.fit(train_data, train_labels, epochs=epochs,
                         validation_data=(test_data, test_labels))  # ,callbacks=[WandbCallback()]
+
+    trainingTime = datetime.datetime.now() - startTime
+    print("Time until training finished: " + str(trainingTime))
 
     return model, history
 
 
 def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epochs):
     print("TRAINING RESNET50")
-
-    # TODO: Checken ob Batch-Norm Layer auf gefroren sind
 
     # Load ResNet and freeze all layers
     base_model = keras.applications.ResNet50V2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
