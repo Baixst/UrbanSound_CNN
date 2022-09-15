@@ -41,9 +41,11 @@ AUDIO_PATH = "res/audio_3sec_duplicated_44khz"                  # not used for t
 IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
 DWT_FEATURES_CSV = "res/dwt_features_3sec_dup_44khz.csv"                   # dwt features for training dense net
-TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
+TRAIN_CSV, TEST_CSV = "metadata/Trainfiles_test.csv", "metadata/Testfiles_test.csv"  # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
+CROSS_VAL_RESULTS = "results/crossVal_results.csv"          # contains acc + loss results for manual cross val
+CROSS_VAL_PREDICTIONS = "results/crossVal_predictions.csv"  # contains predictions + lables results for manual cross val
 
 # Script Tasks
 create_spectrograms = False
@@ -51,10 +53,11 @@ collect_dwt_data = False
 create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = True
+build_and_train_STFT = False
 stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
 build_and_train_DWT = False
 build_and_train_Raw_MaxPool = False
+manual_evaluation = True
 
 # Preprocess Parameters
 SPECTROGRAM_TYPE = "mel"
@@ -70,13 +73,14 @@ IMG_SIZE_X, IMG_SIZE_Y = 128, 128
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 2  # config.get("epochs")
+TRAIN_EPOCHS = 3  # config.get("epochs")
 # BATCH_SIZE = 0
 
 # Evalutation Parameters
-USE_DEF_CROSS_VAL = True
+USE_DEF_CROSS_VAL = False
 USE_RAND_CROSS_VAL = False
 CROSS_VAL_FOLDS = 4
+CURRENT_FOLD = 1        # used for cross-val when each fold is run on it's own
 
 CLASS_NAMES = ['air_conditioner', 'car_horn', 'children_playing', 'dog_bark', 'drilling', 'engine_idling',
                'gun_shot', 'jackhammer', 'siren', 'street_music']
@@ -241,10 +245,10 @@ if build_and_train_STFT:
 
         # EVALUATE MODEL
         print("------------------- \nHistory:")
-        eva.evaluate_epochs(histories)
+        eva.evaluate_epochs(histories, fold=CURRENT_FOLD)
         print("---------------------------- \nEvaluation of Model:")
         test_loss, test_acc = model.evaluate(testImages, testLabels, verbose=2)
-        eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testImages, testLabels)
+        eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testImages, testLabels, CURRENT_FOLD)
 
     # run.finish()
 
@@ -299,10 +303,10 @@ if build_and_train_DWT:
 
         # EVALUATE MODEL
         print("------------------- \nHistory:")
-        eva.evaluate_epochs(histories)
+        eva.evaluate_epochs(histories, fold=CURRENT_FOLD)
         print("---------------------------- \nEvaluation of Model:")
         test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)
-        eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testFeat, testLabels)
+        eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testFeat, testLabels, CURRENT_FOLD)
 
 if build_and_train_Raw_MaxPool:
     # LOAD DATASET
@@ -321,4 +325,7 @@ if build_and_train_Raw_MaxPool:
     eva.evaluate_epochs(histories)
     print("---------------------------- \nEvaluation of Model:")
     test_loss, test_acc = model.evaluate(testData, testLabels, verbose=2)
-    eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testData, testLabels)
+    eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testData, testLabels, CURRENT_FOLD)
+
+if manual_evaluation:
+    eva.ManualCrossVal_Eval(CLASS_NAMES, CROSS_VAL_RESULTS, CROSS_VAL_PREDICTIONS)

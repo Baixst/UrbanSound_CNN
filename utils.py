@@ -5,6 +5,9 @@ import librosa
 import librosa.display
 from matplotlib import pyplot as plt
 import shutil
+import pandas as pd
+import numpy as np
+import tensorflow as tf
 
 
 def CheckDurations(path):
@@ -147,3 +150,43 @@ def PrintDurationInfo(durations):
 
     return
 
+
+def ReadResultsFromCSV(results_csv):
+    df = pd.read_csv(results_csv)
+
+    epochs = df["Epoch"].max()
+
+    acc_arr = np.zeros(epochs)
+    val_acc_arr = np.zeros(epochs)
+    loss_arr = np.zeros(epochs)
+    val_loss_arr = np.zeros(epochs)
+
+    # for each epoch: sum values from all folds and divide by epochs afterwards to get avg values
+    for index, row in df.iterrows():
+        epoch = int(row["Epoch"]) - 1
+        acc_arr[epoch] += float(row["Accuracy"])
+        val_acc_arr[epoch] += float(row["Val-Accuracy"])
+        loss_arr[epoch] += float(row["Loss"])
+        val_loss_arr[epoch] += float(row["Val-Loss"])
+
+    acc_arr = acc_arr / epochs
+    val_acc_arr = val_acc_arr / epochs
+    loss_arr = loss_arr / epochs
+    val_loss_arr = val_loss_arr / epochs
+
+    return acc_arr, val_acc_arr, loss_arr, val_loss_arr
+
+
+def ReadPredictionsFromCSV(predictions_csv):
+    df = pd.read_csv(predictions_csv)
+
+    pred_arr = np.zeros(len(df.index))
+    lable_arr = np.zeros((len(df.index), 1))
+
+    for index, row in df.iterrows():
+        pred_arr[index] = int(row["Prediction"])
+        lable_arr[[index]] = int(row["True_Lable"])
+
+    pred_tensor = tf.convert_to_tensor(pred_arr, dtype="int64")
+
+    return pred_tensor, lable_arr

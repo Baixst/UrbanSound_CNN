@@ -33,9 +33,9 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
-    # model.add(keras.layers.Flatten())
-    model.add(keras.layers.GlobalAveragePooling2D())
-    # model.add(keras.layers.Dense(256, activation='relu'))
+    model.add(keras.layers.Flatten())
+    # model.add(keras.layers.GlobalAveragePooling2D())
+    model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dense(64, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
 

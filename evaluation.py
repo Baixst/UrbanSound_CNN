@@ -4,6 +4,7 @@ import numpy as np
 import seaborn as sns
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import utils
 
 def prediction_accuracy(predictions, true_labels):
 
@@ -65,9 +66,11 @@ def downsample_for_balanced_acc(predictions, true_labels, random_seed):
     return prediction_tensor, true_tensor
 
 
-def Show_Confusion_Matrix(class_names, model, test_acc, test_images, test_labels):
+def Show_Confusion_Matrix(class_names, model, test_acc, test_images, test_labels, fold=1):
     predictions = model.predict(test_images)
     predictions = tf.argmax(predictions, axis=-1)
+
+    write_predictions_to_csv(predictions, test_labels, fold)
 
     plot_confusion_matrix(class_names, test_acc, predictions, test_labels)
     return
@@ -121,7 +124,7 @@ def plot_confusion_matrix(class_names, test_acc, predictions, true_labels):
     return
 
 
-def evaluate_epochs(histories):
+def evaluate_epochs(histories, fold=1):
     all_loss_arr, all_acc_arr = np.array(histories[0].history['loss']), np.array(histories[0].history['accuracy'])
     all_val_loss_arr, all_val_acc_arr = np.array(histories[0].history['val_loss']), np.array(histories[0].history['val_accuracy'])
     counter = 0
@@ -153,7 +156,7 @@ def evaluate_epochs(histories):
     print("best mean-val-acc value: " + str(max(all_val_acc_arr)))
     print("best mean-val-acc epoch: " + str(all_val_acc_arr.argmax() + 1))
 
-    write_results_to_csv(all_loss_arr, all_acc_arr, all_val_loss_arr, all_val_acc_arr)
+    write_results_to_csv(all_loss_arr, all_acc_arr, all_val_loss_arr, all_val_acc_arr, fold)
     plot_accuracy_over_epochs(all_acc_arr, all_val_acc_arr)
     plot_loss_over_epochs(all_loss_arr, all_val_loss_arr)
 
@@ -185,25 +188,34 @@ def EvaluteCrossValidation(histories, accs, losses, predictions_arr, test_labels
     return
 
 
-def write_results_to_csv(loss_arr, acc_arr, val_loss_arr, val_acc_arr):
-    loss_result = "results/crossVal_loss.csv"
-    acc_result = "results/crossVal_accuracy.csv"
+def write_results_to_csv(loss_arr, acc_arr, val_loss_arr, val_acc_arr, fold):
+    result_csv = "results/fold_results.csv"
 
-    lossCSV = open(loss_result, 'w+', encoding='UTF8', newline='')
-    accCSV = open(acc_result, 'w+', encoding='UTF8', newline='')
+    resultCSV = open(result_csv, 'w+', encoding='UTF8', newline='')
+    result_writer = csv.writer(resultCSV)
 
-    loss_writer, acc_writer = csv.writer(lossCSV), csv.writer(accCSV)
-
-    csv_header_loss, csv_header_acc = ["Epoch", "Loss", "Val-Loss"], ["Epoch", "Accuracy", "Val-Accuracy"]
-    loss_writer.writerow(csv_header_loss)
-    acc_writer.writerow(csv_header_acc)
+    csv_header = ["Fold", "Epoch", "Accuracy", "Val-Accuracy", "Loss", "Val-Loss"]
+    result_writer.writerow(csv_header)
 
     for i in range(loss_arr.size):
-        values = i+1, loss_arr[i], val_loss_arr[i]
-        loss_writer.writerow(values)
-    for i in range(acc_arr.size):
-        values = i+1, acc_arr[i], val_acc_arr[i]
-        acc_writer.writerow(values)
+        values = fold, i+1, acc_arr[i], val_acc_arr[i], loss_arr[i], val_loss_arr[i]
+        result_writer.writerow(values)
+
+    return
+
+def write_predictions_to_csv(predictions, true_lables, fold):
+    predictions_csv = "results/fold_predictions.csv"
+    pred_arr = predictions.numpy()
+
+    predictionsCSV = open(predictions_csv, 'w+', encoding='UTF8', newline='')
+    predictions_writer = csv.writer(predictionsCSV)
+
+    csv_header = ["Fold", "Prediction", "True_Lable"]
+    predictions_writer.writerow(csv_header)
+
+    for i in range(len(predictions)):
+        values = fold, int(pred_arr[i]), int(true_lables[i])
+        predictions_writer.writerow(values)
 
     return
 
@@ -238,4 +250,21 @@ def plot_loss_over_epochs(loss_arr, val_loss_arr):
 
     fig.savefig("results/LossPlot.png", bbox_inches='tight')
     plt.show()
+    return
+
+
+def ManualCrossVal_Eval(class_names, results_csv, predictions_csv):
+
+    acc_arr, val_acc_arr, loss_arr, val_loss_arr = utils.ReadResultsFromCSV(results_csv)
+    test_acc = val_acc_arr[val_acc_arr.size - 1]
+
+    # plot the results
+    plot_accuracy_over_epochs(acc_arr, val_acc_arr)
+    plot_loss_over_epochs(loss_arr, val_loss_arr)
+
+    pred_tensor, true_lables = utils.ReadPredictionsFromCSV(predictions_csv)
+
+    # plot confusion matrix
+    plot_confusion_matrix(class_names, test_acc, pred_tensor, true_lables)
+
     return
