@@ -241,20 +241,6 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\results\crossVal_accuracy.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\results\crossVal_loss.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="\results\crossVal_results.csv">
           <value>
             <Attribute>
@@ -270,13 +256,6 @@
           </value>
         </entry>
         <entry key="\results\fold_results.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\results\full_crossVal_info.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
