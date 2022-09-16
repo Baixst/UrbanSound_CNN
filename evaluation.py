@@ -109,7 +109,7 @@ def plot_confusion_matrix(class_names, test_acc, predictions, true_labels):
     fig.suptitle(("Overall Accuracy = " + str(round(test_acc, 3))))
     plt.subplots_adjust(left=0.185, bottom=0.225, right=1, top=0.89, wspace=0.2, hspace=0.2)
     fig.savefig("results/ConfusionMatrix_Normal.png", bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
     # Same again but for balanced accuracy
     fig = plt.figure(figsize=(10, 8))
@@ -119,7 +119,7 @@ def plot_confusion_matrix(class_names, test_acc, predictions, true_labels):
     fig.suptitle(("Balanced Accuracy = " + str(round(balanced_acc, 3))))
     plt.subplots_adjust(left=0.185, bottom=0.225, right=1, top=0.89, wspace=0.2, hspace=0.2)
     fig.savefig("results/ConfusionMatrix_Balanced.png", bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
     return
 
@@ -233,7 +233,7 @@ def plot_accuracy_over_epochs(acc_arr, val_acc_arr):
     plt.legend()
 
     fig.savefig("results/AccuracyPlot.png", bbox_inches='tight')
-    plt.show()
+    # plt.show()
     return
 
 
@@ -241,21 +241,21 @@ def plot_loss_over_epochs(loss_arr, val_loss_arr):
     epochs = range(1, len(loss_arr) + 1)
     fig = plt.figure(figsize=(10, 7))
 
-    plt.plot(epochs, loss_arr, color='blue', label='Training acc')
-    plt.plot(epochs, val_loss_arr, color='#FFA359', label='Validation acc')  # Hexcode for orange
+    plt.plot(epochs, loss_arr, color='blue', label='Training loss')
+    plt.plot(epochs, val_loss_arr, color='#FFA359', label='Validation loss')  # Hexcode for orange
     plt.title('Training and validation loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
 
     fig.savefig("results/LossPlot.png", bbox_inches='tight')
-    plt.show()
+    # plt.show()
     return
 
 
-def ManualCrossVal_Eval(class_names, results_csv, predictions_csv):
+def ManualCrossVal_Eval(class_names, results_csv, predictions_csv, folds):
 
-    acc_arr, val_acc_arr, loss_arr, val_loss_arr = utils.ReadResultsFromCSV(results_csv)
+    acc_arr, val_acc_arr, loss_arr, val_loss_arr = utils.ReadResultsFromCSV(results_csv, folds)
     test_acc = val_acc_arr[val_acc_arr.size - 1]
 
     # plot the results

@@ -11,7 +11,6 @@ import loading as loader
 # Use CPU
 # tf.config.experimental.set_visible_devices([], 'GPU')
 
-'''
 # trying to solve out of memory error
 
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
@@ -27,7 +26,6 @@ if gpus:
   except RuntimeError as e:
     # Memory growth must be set before GPUs have been initialized
     print(e)
-'''
 
 # import wandb
 # from wandb.keras import WandbCallback
@@ -41,7 +39,8 @@ AUDIO_PATH = "res/audio_3sec_duplicated_44khz"                  # not used for t
 IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
 DWT_FEATURES_CSV = "res/dwt_features_3sec_dup_44khz.csv"                   # dwt features for training dense net
-TRAIN_CSV, TEST_CSV = "metadata/Trainfiles_test.csv", "metadata/Testfiles_test.csv"  # csv's for normal single training
+TRAIN_CSV = "metadata/def_folds/train10.csv"
+TEST_CSV = "metadata/def_folds/test10.csv"                               # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 CROSS_VAL_RESULTS = "results/crossVal_results.csv"          # contains acc + loss results for manual cross val
@@ -73,14 +72,14 @@ IMG_SIZE_X, IMG_SIZE_Y = 128, 128
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 3  # config.get("epochs")
+TRAIN_EPOCHS = 30  # config.get("epochs")
 # BATCH_SIZE = 0
 
 # Evalutation Parameters
 USE_DEF_CROSS_VAL = False
 USE_RAND_CROSS_VAL = False
 CROSS_VAL_FOLDS = 4
-CURRENT_FOLD = 1        # used for cross-val when each fold is run on it's own
+CURRENT_FOLD = 10        # used for cross-val when each fold is run on it's own
 
 CLASS_NAMES = ['air_conditioner', 'car_horn', 'children_playing', 'dog_bark', 'drilling', 'engine_idling',
                'gun_shot', 'jackhammer', 'siren', 'street_music']
@@ -328,4 +327,4 @@ if build_and_train_Raw_MaxPool:
     eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testData, testLabels, CURRENT_FOLD)
 
 if manual_evaluation:
-    eva.ManualCrossVal_Eval(CLASS_NAMES, CROSS_VAL_RESULTS, CROSS_VAL_PREDICTIONS)
+    eva.ManualCrossVal_Eval(CLASS_NAMES, CROSS_VAL_RESULTS, CROSS_VAL_PREDICTIONS, 10)
