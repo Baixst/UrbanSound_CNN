@@ -59,9 +59,9 @@ def CreateCWTScaleograms(audio_path, img_save_path, freq_scales, wavelet, px_x, 
     return
 
 
-def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate):
+def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate, wavelet="db1"):
     """
-    Extract Detail Coeffs, build features from them and write results to csv file
+    Extract Detail- and Approx- Coeffs, build features from them and write results to csv file
     """
 
     file_list = os.listdir(audio_path)
@@ -71,7 +71,7 @@ def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate):
     data_writer = csv.writer(dataCSV)
     csvHeader = ["audio_file"]
     # write first csv line
-    for i in range(1, 17):  # second parameter is dwt max level+1
+    for i in range(1, 16):  # second parameter is dwt max level+2
         csvHeader.append("entropie_" + str(i))
         csvHeader.append("mean_" + str(i))
         csvHeader.append("variance_" + str(i))
@@ -89,15 +89,14 @@ def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate):
         # 1. Read Audio file
         data, sr = librosa.load(file_path, sr=samplerate)
         # data = data / max(data)
-        data = data[0:131072]  # results in center 131.072 samples of 3 sec clip
-        wavelet = "db1"
-        max_level = pywt.dwt_max_level(len(data), wavelet) - 1
+        # data = data[0:131072]  # results in center 131.072 samples of 3 sec clip
+        # max_level = pywt.dwt_max_level(len(data), wavelet) - 1
 
-        coeffs = pywt.wavedec(data, wavelet, level=max_level, mode="symmetric")
+        coeffs = pywt.wavedec(data, wavelet, level=14, mode="symmetric")
         line = [file]
 
         # Calculate Features
-        for i in range(1, len(coeffs)):
+        for i in range(0, len(coeffs)):
             shannon_ent = feat.shannon_entropy(coeffs[i])
             mean = statistics.mean(coeffs[i])
             variance = statistics.variance(coeffs[i], mean)
@@ -126,6 +125,412 @@ def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate):
         utils.progress_bar(files_done, len(file_list))
 
     dataCSV.close()
+    return
+
+
+def dwt_feature_extractionV2(audio_path, dwt_feature_csv, samplerate, wavelet="db1"):
+    """
+    Slice audio file into 1sec clips and extract detail and approx Coeffs, build features from them and write results to csv file
+    """
+
+    file_list = os.listdir(audio_path)
+    files_done = 0
+
+    dataCSV = open(dwt_feature_csv, 'w+', encoding='UTF8', newline='')
+    data_writer = csv.writer(dataCSV)
+    csvHeader = ["audio_file"]
+
+    # write first csv line
+    i = 1
+    while i < 52:
+        csvHeader.append("entropie_" + str(i))
+        csvHeader.append("mean_" + str(i))
+        csvHeader.append("variance_" + str(i))
+        csvHeader.append("std_" + str(i))
+        csvHeader.append("iqr_" + str(i))
+        csvHeader.append("skew_" + str(i))
+        csvHeader.append("kurtosis_" + str(i))
+        csvHeader.append("standard_error_mean_" + str(i))
+        csvHeader.append("median_abs_deviation_" + str(i))
+
+        csvHeader.append("entropie_" + str(i + 1))
+        csvHeader.append("mean_" + str(i + 1))
+        csvHeader.append("variance_" + str(i + 1))
+        csvHeader.append("std_" + str(i + 1))
+        csvHeader.append("iqr_" + str(i + 1))
+        csvHeader.append("skew_" + str(i + 1))
+        csvHeader.append("kurtosis_" + str(i + 1))
+        csvHeader.append("standard_error_mean_" + str(i + 1))
+        csvHeader.append("median_abs_deviation_" + str(i + 1))
+
+        csvHeader.append("entropie_" + str(i + 2))
+        csvHeader.append("mean_" + str(i + 2))
+        csvHeader.append("variance_" + str(i + 2))
+        csvHeader.append("std_" + str(i + 2))
+        csvHeader.append("iqr_" + str(i + 2))
+        csvHeader.append("skew_" + str(i + 2))
+        csvHeader.append("kurtosis_" + str(i + 2))
+        csvHeader.append("standard_error_mean_" + str(i + 2))
+        csvHeader.append("median_abs_deviation_" + str(i + 2))
+
+        csvHeader.append("entropie_" + str(i + 3))
+        csvHeader.append("mean_" + str(i + 3))
+        csvHeader.append("variance_" + str(i + 3))
+        csvHeader.append("std_" + str(i + 3))
+        csvHeader.append("iqr_" + str(i + 3))
+        csvHeader.append("skew_" + str(i + 3))
+        csvHeader.append("kurtosis_" + str(i + 3))
+        csvHeader.append("standard_error_mean_" + str(i + 3))
+        csvHeader.append("median_abs_deviation_" + str(i + 3))
+
+        i += 4
+    data_writer.writerow(csvHeader)
+
+    for file in file_list:
+        file_path = audio_path + "/" + file
+
+        # 1. Read Audio file
+        data, sr = librosa.load(file_path, sr=samplerate)
+
+        seg1 = data[0:44000]
+        seg2 = data[44000:88000]
+        seg3 = data[88000:132000]
+        seg4 = data[132000:176000]
+
+        # max_level = pywt.dwt_max_level(len(data), wavelet) - 1
+
+        coeffs1 = pywt.wavedec(seg1, wavelet, level=12, mode="symmetric")
+        coeffs2 = pywt.wavedec(seg2, wavelet, level=12, mode="symmetric")
+        coeffs3 = pywt.wavedec(seg3, wavelet, level=12, mode="symmetric")
+        coeffs4 = pywt.wavedec(seg4, wavelet, level=12, mode="symmetric")
+        line = [file]
+
+        # Calculate Features
+        for i in range(0, len(coeffs1)):
+            shannon_ent1 = feat.shannon_entropy(coeffs1[i])
+            shannon_ent2 = feat.shannon_entropy(coeffs2[i])
+            shannon_ent3 = feat.shannon_entropy(coeffs3[i])
+            shannon_ent4 = feat.shannon_entropy(coeffs4[i])
+            mean1 = statistics.mean(coeffs1[i])
+            mean2 = statistics.mean(coeffs2[i])
+            mean3 = statistics.mean(coeffs3[i])
+            mean4 = statistics.mean(coeffs4[i])
+            variance1 = statistics.variance(coeffs1[i], mean1)
+            variance2 = statistics.variance(coeffs2[i], mean2)
+            variance3 = statistics.variance(coeffs3[i], mean3)
+            variance4 = statistics.variance(coeffs4[i], mean4)
+            std1 = np.std(coeffs1[i])
+            std2 = np.std(coeffs2[i])
+            std3 = np.std(coeffs3[i])
+            std4 = np.std(coeffs4[i])
+            iqr1 = scipy.stats.iqr(coeffs1[i])
+            iqr2 = scipy.stats.iqr(coeffs2[i])
+            iqr3 = scipy.stats.iqr(coeffs3[i])
+            iqr4 = scipy.stats.iqr(coeffs4[i])
+            skew1 = scipy.stats.skew(coeffs1[i])
+            skew2 = scipy.stats.skew(coeffs2[i])
+            skew3 = scipy.stats.skew(coeffs3[i])
+            skew4 = scipy.stats.skew(coeffs4[i])
+            kurtosis1 = scipy.stats.kurtosis(coeffs1[i])
+            kurtosis2 = scipy.stats.kurtosis(coeffs2[i])
+            kurtosis3 = scipy.stats.kurtosis(coeffs3[i])
+            kurtosis4 = scipy.stats.kurtosis(coeffs4[i])
+            standard_error_mean1 = scipy.stats.sem(coeffs1[i])
+            standard_error_mean2 = scipy.stats.sem(coeffs2[i])
+            standard_error_mean3 = scipy.stats.sem(coeffs3[i])
+            standard_error_mean4 = scipy.stats.sem(coeffs4[i])
+            median_abs_deviation1 = scipy.stats.median_abs_deviation(coeffs1[i])
+            median_abs_deviation2 = scipy.stats.median_abs_deviation(coeffs2[i])
+            median_abs_deviation3 = scipy.stats.median_abs_deviation(coeffs3[i])
+            median_abs_deviation4 = scipy.stats.median_abs_deviation(coeffs4[i])
+
+            line.append(shannon_ent1)
+            line.append(mean1)
+            line.append(variance1)
+            line.append(std1)
+            line.append(iqr1)
+            line.append(skew1)
+            line.append(kurtosis1)
+            line.append(standard_error_mean1)
+            line.append(median_abs_deviation1)
+
+            line.append(shannon_ent2)
+            line.append(mean2)
+            line.append(variance2)
+            line.append(std2)
+            line.append(iqr2)
+            line.append(skew2)
+            line.append(kurtosis2)
+            line.append(standard_error_mean2)
+            line.append(median_abs_deviation2)
+
+            line.append(shannon_ent3)
+            line.append(mean3)
+            line.append(variance3)
+            line.append(std3)
+            line.append(iqr3)
+            line.append(skew3)
+            line.append(kurtosis3)
+            line.append(standard_error_mean3)
+            line.append(median_abs_deviation3)
+
+            line.append(shannon_ent4)
+            line.append(mean4)
+            line.append(variance4)
+            line.append(std4)
+            line.append(iqr4)
+            line.append(skew4)
+            line.append(kurtosis4)
+            line.append(standard_error_mean4)
+            line.append(median_abs_deviation4)
+
+        data_writer.writerow(line)
+        files_done += 1
+
+        utils.progress_bar(files_done, len(file_list))
+
+    dataCSV.close()
+    return
+
+
+def dwt_feature_extractionV3(audio_path, dwt_feature_csv, samplerate, wavelet="db1"):
+    file_list = os.listdir(audio_path)
+    files_done = 0
+
+    dataCSV = open(dwt_feature_csv, 'w+', encoding='UTF8', newline='')
+    data_writer = csv.writer(dataCSV)
+    csvHeader = ["audio_file"]
+
+    # write first csv line
+    i = 1
+    while i < 104:  # max_level+1 * anzahl von segmenten
+        csvHeader.append("entropie_" + str(i))
+        csvHeader.append("mean_" + str(i))
+        csvHeader.append("variance_" + str(i))
+        csvHeader.append("std_" + str(i))
+        csvHeader.append("iqr_" + str(i))
+        csvHeader.append("skew_" + str(i))
+        csvHeader.append("kurtosis_" + str(i))
+        csvHeader.append("standard_error_mean_" + str(i))
+        csvHeader.append("median_abs_deviation_" + str(i))
+
+        csvHeader.append("entropie_" + str(i + 1))
+        csvHeader.append("mean_" + str(i + 1))
+        csvHeader.append("variance_" + str(i + 1))
+        csvHeader.append("std_" + str(i + 1))
+        csvHeader.append("iqr_" + str(i + 1))
+        csvHeader.append("skew_" + str(i + 1))
+        csvHeader.append("kurtosis_" + str(i + 1))
+        csvHeader.append("standard_error_mean_" + str(i + 1))
+        csvHeader.append("median_abs_deviation_" + str(i + 1))
+
+        csvHeader.append("entropie_" + str(i + 2))
+        csvHeader.append("mean_" + str(i + 2))
+        csvHeader.append("variance_" + str(i + 2))
+        csvHeader.append("std_" + str(i + 2))
+        csvHeader.append("iqr_" + str(i + 2))
+        csvHeader.append("skew_" + str(i + 2))
+        csvHeader.append("kurtosis_" + str(i + 2))
+        csvHeader.append("standard_error_mean_" + str(i + 2))
+        csvHeader.append("median_abs_deviation_" + str(i + 2))
+
+        csvHeader.append("entropie_" + str(i + 3))
+        csvHeader.append("mean_" + str(i + 3))
+        csvHeader.append("variance_" + str(i + 3))
+        csvHeader.append("std_" + str(i + 3))
+        csvHeader.append("iqr_" + str(i + 3))
+        csvHeader.append("skew_" + str(i + 3))
+        csvHeader.append("kurtosis_" + str(i + 3))
+        csvHeader.append("standard_error_mean_" + str(i + 3))
+        csvHeader.append("median_abs_deviation_" + str(i + 3))
+
+        i += 4
+    data_writer.writerow(csvHeader)
+
+    for file in file_list:
+        file_path = audio_path + "/" + file
+
+        # 1. Read Audio file
+        data, sr = librosa.load(file_path, sr=samplerate)
+        # data = data = data[614:131686]  # results in center 131.072 samples of 3 sec clip
+
+        # 2. Calculate DWT
+        coeffs = pywt.wavedec(data, wavelet, level=12, mode="symmetric")  # 14 for 4 segments
+        line = [file]
+
+        for i in range(0, len(coeffs)):
+
+            # 3. Split coeffs in 4 segments
+            half1, half2 = utils.split_list(coeffs[i])
+            quader1, quader2 = utils.split_list(half1)
+            quader3, quader4 = utils.split_list(half2)
+            part1, part2 = utils.split_list(quader1)
+            part3, part4 = utils.split_list(quader2)
+            part5, part6 = utils.split_list(quader3)
+            part7, part8 = utils.split_list(quader4)
+
+
+            # 4. Calculate features
+            shannon_ent1 = feat.shannon_entropy(part1)
+            shannon_ent2 = feat.shannon_entropy(part2)
+            shannon_ent3 = feat.shannon_entropy(part3)
+            shannon_ent4 = feat.shannon_entropy(part4)
+            shannon_ent5 = feat.shannon_entropy(part5)
+            shannon_ent6 = feat.shannon_entropy(part6)
+            shannon_ent7 = feat.shannon_entropy(part7)
+            shannon_ent8 = feat.shannon_entropy(part8)
+            mean1 = statistics.mean(part1)
+            mean2 = statistics.mean(part2)
+            mean3 = statistics.mean(part3)
+            mean4 = statistics.mean(part4)
+            mean5 = statistics.mean(part5)
+            mean6 = statistics.mean(part6)
+            mean7 = statistics.mean(part7)
+            mean8 = statistics.mean(part8)
+            variance1 = statistics.variance(part1, mean1)
+            variance2 = statistics.variance(part2, mean2)
+            variance3 = statistics.variance(part3, mean3)
+            variance4 = statistics.variance(part4, mean4)
+            variance5 = statistics.variance(part5, mean5)
+            variance6 = statistics.variance(part6, mean6)
+            variance7 = statistics.variance(part7, mean7)
+            variance8 = statistics.variance(part8, mean8)
+            std1 = np.std(part1)
+            std2 = np.std(part2)
+            std3 = np.std(part3)
+            std4 = np.std(part4)
+            std5 = np.std(part5)
+            std6 = np.std(part6)
+            std7 = np.std(part7)
+            std8 = np.std(part8)
+            iqr1 = scipy.stats.iqr(part1)
+            iqr2 = scipy.stats.iqr(part2)
+            iqr3 = scipy.stats.iqr(part3)
+            iqr4 = scipy.stats.iqr(part4)
+            iqr5 = scipy.stats.iqr(part5)
+            iqr6 = scipy.stats.iqr(part6)
+            iqr7 = scipy.stats.iqr(part7)
+            iqr8 = scipy.stats.iqr(part8)
+            skew1 = scipy.stats.skew(part1)
+            skew2 = scipy.stats.skew(part2)
+            skew3 = scipy.stats.skew(part3)
+            skew4 = scipy.stats.skew(part4)
+            skew5 = scipy.stats.skew(part5)
+            skew6 = scipy.stats.skew(part6)
+            skew7 = scipy.stats.skew(part7)
+            skew8 = scipy.stats.skew(part8)
+            kurtosis1 = scipy.stats.kurtosis(part1)
+            kurtosis2 = scipy.stats.kurtosis(part2)
+            kurtosis3 = scipy.stats.kurtosis(part3)
+            kurtosis4 = scipy.stats.kurtosis(part4)
+            kurtosis5 = scipy.stats.kurtosis(part5)
+            kurtosis6 = scipy.stats.kurtosis(part6)
+            kurtosis7 = scipy.stats.kurtosis(part7)
+            kurtosis8 = scipy.stats.kurtosis(part8)
+            standard_error_mean1 = scipy.stats.sem(part1)
+            standard_error_mean2 = scipy.stats.sem(part2)
+            standard_error_mean3 = scipy.stats.sem(part3)
+            standard_error_mean4 = scipy.stats.sem(part4)
+            standard_error_mean5 = scipy.stats.sem(part5)
+            standard_error_mean6 = scipy.stats.sem(part6)
+            standard_error_mean7 = scipy.stats.sem(part7)
+            standard_error_mean8 = scipy.stats.sem(part8)
+            median_abs_deviation1 = scipy.stats.median_abs_deviation(part1)
+            median_abs_deviation2 = scipy.stats.median_abs_deviation(part2)
+            median_abs_deviation3 = scipy.stats.median_abs_deviation(part3)
+            median_abs_deviation4 = scipy.stats.median_abs_deviation(part4)
+            median_abs_deviation5 = scipy.stats.median_abs_deviation(part5)
+            median_abs_deviation6 = scipy.stats.median_abs_deviation(part6)
+            median_abs_deviation7 = scipy.stats.median_abs_deviation(part7)
+            median_abs_deviation8 = scipy.stats.median_abs_deviation(part8)
+
+            line.append(shannon_ent1)
+            line.append(mean1)
+            line.append(variance1)
+            line.append(std1)
+            line.append(iqr1)
+            line.append(skew1)
+            line.append(kurtosis1)
+            line.append(standard_error_mean1)
+            line.append(median_abs_deviation1)
+
+            line.append(shannon_ent2)
+            line.append(mean2)
+            line.append(variance2)
+            line.append(std2)
+            line.append(iqr2)
+            line.append(skew2)
+            line.append(kurtosis2)
+            line.append(standard_error_mean2)
+            line.append(median_abs_deviation2)
+
+            line.append(shannon_ent3)
+            line.append(mean3)
+            line.append(variance3)
+            line.append(std3)
+            line.append(iqr3)
+            line.append(skew3)
+            line.append(kurtosis3)
+            line.append(standard_error_mean3)
+            line.append(median_abs_deviation3)
+
+            line.append(shannon_ent4)
+            line.append(mean4)
+            line.append(variance4)
+            line.append(std4)
+            line.append(iqr4)
+            line.append(skew4)
+            line.append(kurtosis4)
+            line.append(standard_error_mean4)
+            line.append(median_abs_deviation4)
+
+            line.append(shannon_ent5)
+            line.append(mean5)
+            line.append(variance5)
+            line.append(std5)
+            line.append(iqr5)
+            line.append(skew5)
+            line.append(kurtosis5)
+            line.append(standard_error_mean5)
+            line.append(median_abs_deviation5)
+
+            line.append(shannon_ent6)
+            line.append(mean6)
+            line.append(variance6)
+            line.append(std6)
+            line.append(iqr6)
+            line.append(skew6)
+            line.append(kurtosis6)
+            line.append(standard_error_mean6)
+            line.append(median_abs_deviation6)
+
+            line.append(shannon_ent7)
+            line.append(mean7)
+            line.append(variance7)
+            line.append(std7)
+            line.append(iqr7)
+            line.append(skew7)
+            line.append(kurtosis7)
+            line.append(standard_error_mean7)
+            line.append(median_abs_deviation7)
+
+            line.append(shannon_ent8)
+            line.append(mean8)
+            line.append(variance8)
+            line.append(std8)
+            line.append(iqr8)
+            line.append(skew8)
+            line.append(kurtosis8)
+            line.append(standard_error_mean8)
+            line.append(median_abs_deviation8)
+
+        data_writer.writerow(line)
+        files_done += 1
+
+        utils.progress_bar(files_done, len(file_list))
+
+    dataCSV.close()
+
     return
 
 

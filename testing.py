@@ -13,6 +13,9 @@ import utils
 import numpy as np
 import preprocess
 import scipy.signal as scsi
+from PIL import Image
+from pylab import *
+import pywt
 
 
 def findMonoClip(audio_path, target):
@@ -363,7 +366,7 @@ def createDuplicatedWaveFiles(orginal_files, save_path, target_duration, sampler
 
 
 # createCenteredWaveFiles("res/audio", "res/audio_3sec_centered_44khz", 3, 44100)
-# createDuplicatedWaveFiles("res/audio", "res/audio_3sec_duplicated_44khz", 3, 44100)
+createDuplicatedWaveFiles("res/audio", "res/audio_4sec_duplicated_44khz", 4, 44100)
 
 def GetSubtypeOf(filename):
     ob = sf.SoundFile(filename)
@@ -450,3 +453,43 @@ def AnalizeAudioFiles(save_path):
 
 
 # AnalizeAudioFiles("res/audio_4sec_centered")
+
+def zero_pad(image_path):
+    image = Image.open(image_path).convert("L")
+    img_arr = asarray(image)
+    print(img_arr.shape)
+    print(asarray(img_arr))
+
+    img_arr = np.pad(img_arr, pad_width=[(48, 48)], mode='constant')
+    print(img_arr.shape)
+    print(asarray(img_arr))
+
+    return
+
+# zero_pad("res/img_4sec_cen_128x128_44khz/518-4-0-2.png")
+
+def dwt_test():
+    data, sr = librosa.load("res/audio_4sec/344-3-0-0.wav", sr=44100)
+
+    seg1 = data[0:44000]
+    seg2 = data[44000:88000]
+    seg3 = data[88000:132000]
+    seg4 = data[132000:176000]
+
+    wavelet = "db1"
+    # max_level = pywt.dwt_max_level(len(data), wavelet) - 1
+
+    coeffs = pywt.wavedec(seg1, wavelet, level=12, mode="symmetric")
+
+    print(len(coeffs))
+
+    # print(coeffs)
+    # coeffs = np.append(coeffs, pywt.wavedec(seg4, wavelet, level=12, mode="symmetric"))
+
+    # Calculate Features
+    # for i in range(1, len(coeffs)):
+    #     shannon_ent = feat.shannon_entropy(coeffs[i])
+    #     mean = statistics.mean(coeffs[i])
+    return
+
+# dwt_test()

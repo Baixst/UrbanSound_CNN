@@ -32,7 +32,7 @@ def GenerateArraysDefCross_DWT(index, csv_path, feature_csv):
     return train_feats, train_labels, test_feats, test_labels
 
 
-def GenerateArrays_STFT(train_csv, test_csv, img_path, px_x, px_y):
+def GenerateArrays_STFT(train_csv, test_csv, img_path, px_x, px_y, zero_pad=0):
     df_train = pd.read_csv(train_csv)
     df_test = pd.read_csv(test_csv)
     file_list = os.listdir(img_path)
@@ -43,9 +43,9 @@ def GenerateArrays_STFT(train_csv, test_csv, img_path, px_x, px_y):
     test_labels = GenerateLabelArray(df_test)
 
     print("Generating train image data matrix...")
-    train_images = GenerateImageArray(df_train, file_list, img_path, px_x, px_y)
+    train_images = GenerateImageArray(df_train, file_list, img_path, px_x, px_y, zero_pad)
     print("Generating test image data matrix...")
-    test_images = GenerateImageArray(df_test, file_list, img_path, px_x, px_y)
+    test_images = GenerateImageArray(df_test, file_list, img_path, px_x, px_y, zero_pad)
 
     print("Train labels shape: " + str(train_labels.shape))
     print("Train images shape: " + str(train_images.shape))
@@ -107,7 +107,7 @@ def GenerateLabelArray(dataframe):
     return arr
 
 
-def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y):
+def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y, zero_pad):
     amount_files = len(dataframe.index)
     print("collecting data from " + str(amount_files) + " images")
 
@@ -123,7 +123,13 @@ def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y):
         if img_name in file_list:
             img_name = img_path + "/" + img_name
             image = Image.open(img_name).convert("L")
-            temp_arr = np.append(temp_arr, asarray(image))
+            image_arr = asarray(image)
+            if zero_pad > 0:
+                img_arr = np.pad(img_arr, pad_width=[(zero_pad, zero_pad)], mode='constant')
+
+            # using temp_arr because it takes forever to append to a very long list
+            # that way we append often to a short list and rarly to a long list
+            temp_arr = np.append(temp_arr, image_arr)
 
             if temp_counter < temp_cap:
                 temp_counter += 1
@@ -139,7 +145,6 @@ def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y):
     del temp_arr
 
     full_arr = full_arr.reshape(-1, px_x, px_y, 1)
-    print()
     return full_arr
 
 

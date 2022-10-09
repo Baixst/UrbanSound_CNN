@@ -241,6 +241,27 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\res\dwt_features_4sec_1seg.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\res\dwt_features_V2.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\res\dwt_features_V3.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\results\crossVal_results.csv">
           <value>
             <Attribute>

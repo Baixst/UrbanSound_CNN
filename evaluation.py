@@ -230,6 +230,7 @@ def plot_accuracy_over_epochs(acc_arr, val_acc_arr):
     plt.xlabel('Epochs')
     plt.ylabel('Accucary')
     plt.ylim([0, 1])
+    plt.xlim(0, len(acc_arr)+1)
     plt.legend()
 
     fig.savefig("results/AccuracyPlot.png", bbox_inches='tight')
@@ -246,6 +247,7 @@ def plot_loss_over_epochs(loss_arr, val_loss_arr):
     plt.title('Training and validation loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
+    plt.xlim(0, len(loss_arr) + 1)
     plt.legend()
 
     fig.savefig("results/LossPlot.png", bbox_inches='tight')

@@ -190,3 +190,8 @@ def ReadPredictionsFromCSV(predictions_csv):
     pred_tensor = tf.convert_to_tensor(pred_arr, dtype="int64")
 
     return pred_tensor, lable_arr
+
+
+def split_list(list):
+    half = len(list)//2
+    return list[:half], list[half:]
