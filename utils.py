@@ -151,7 +151,7 @@ def PrintDurationInfo(durations):
     return
 
 
-def ReadResultsFromCSV(results_csv):
+def ReadResultsFromCSV(results_csv, folds):
     df = pd.read_csv(results_csv)
 
     epochs = df["Epoch"].max()
@@ -169,10 +169,10 @@ def ReadResultsFromCSV(results_csv):
         loss_arr[epoch] += float(row["Loss"])
         val_loss_arr[epoch] += float(row["Val-Loss"])
 
-    acc_arr = acc_arr / epochs
-    val_acc_arr = val_acc_arr / epochs
-    loss_arr = loss_arr / epochs
-    val_loss_arr = val_loss_arr / epochs
+    acc_arr = acc_arr / folds
+    val_acc_arr = val_acc_arr / folds
+    loss_arr = loss_arr / folds
+    val_loss_arr = val_loss_arr / folds
 
     return acc_arr, val_acc_arr, loss_arr, val_loss_arr
 

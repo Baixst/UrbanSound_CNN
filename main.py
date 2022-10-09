@@ -11,7 +11,6 @@ import loading as loader
 # Use CPU
 # tf.config.experimental.set_visible_devices([], 'GPU')
 
-'''
 # trying to solve out of memory error
 
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
@@ -27,7 +26,6 @@ if gpus:
   except RuntimeError as e:
     # Memory growth must be set before GPUs have been initialized
     print(e)
-'''
 
 # import wandb
 # from wandb.keras import WandbCallback
@@ -40,8 +38,9 @@ if gpus:
 AUDIO_PATH = "res/audio_4sec_duplicated_44khz"                             # not used for training, only for preprocessing tasks
 IMAGE_PATH = "res/test"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
-DWT_FEATURES_CSV = "res/dwt_features_4sec_1seg.csv"                   # dwt features for training dense net
-TRAIN_CSV, TEST_CSV = "metadata/Trainfiles.csv", "metadata/Testfiles.csv"  # csv's for normal single training
+DWT_FEATURES_CSV = "res/dwt_features_3sec_dup_44khz.csv"                   # dwt features for training dense net
+TRAIN_CSV = "metadata/def_folds/train10.csv"
+TEST_CSV = "metadata/def_folds/test10.csv"                               # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 CROSS_VAL_RESULTS = "results/crossVal_results.csv"          # contains acc + loss results for manual cross val
@@ -80,7 +79,7 @@ TRAIN_EPOCHS = 200  # config.get("epochs")
 USE_DEF_CROSS_VAL = True
 USE_RAND_CROSS_VAL = False
 CROSS_VAL_FOLDS = 4
-CURRENT_FOLD = 1        # used for cross-val when each fold is run on it's own
+CURRENT_FOLD = 10        # used for cross-val when each fold is run on it's own
 
 CLASS_NAMES = ['air_conditioner', 'car_horn', 'children_playing', 'dog_bark', 'drilling', 'engine_idling',
                'gun_shot', 'jackhammer', 'siren', 'street_music']
@@ -339,4 +338,4 @@ if build_and_train_Raw_MaxPool:
     eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testData, testLabels, CURRENT_FOLD)
 
 if manual_evaluation:
-    eva.ManualCrossVal_Eval(CLASS_NAMES, CROSS_VAL_RESULTS, CROSS_VAL_PREDICTIONS)
+    eva.ManualCrossVal_Eval(CLASS_NAMES, CROSS_VAL_RESULTS, CROSS_VAL_PREDICTIONS, 10)
