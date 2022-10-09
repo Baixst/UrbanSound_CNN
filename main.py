@@ -36,11 +36,11 @@ if gpus:
 
 # Path Parameters
 AUDIO_PATH = "res/audio_4sec_duplicated_44khz"                             # not used for training, only for preprocessing tasks
-IMAGE_PATH = "res/test"
+IMAGE_PATH = "res/img_4sec_dup_224x224_44khz_bigFrame"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
 DWT_FEATURES_CSV = "res/dwt_features_3sec_dup_44khz.csv"                   # dwt features for training dense net
-TRAIN_CSV = "metadata/def_folds/train10.csv"
-TEST_CSV = "metadata/def_folds/test10.csv"                               # csv's for normal single training
+TRAIN_CSV = "metadata/Trainfiles.csv"
+TEST_CSV = "metadata/Testfiles.csv"                               # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 CROSS_VAL_RESULTS = "results/crossVal_results.csv"          # contains acc + loss results for manual cross val
@@ -48,12 +48,12 @@ CROSS_VAL_PREDICTIONS = "results/crossVal_predictions.csv"  # contains predictio
 
 # Script Tasks
 create_spectrograms = False
-collect_dwt_data = True
+collect_dwt_data = False
 create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = False
-stft_model_to_use = "own_ResNet"         # "default", "ResNet", "own_ResNet" is possible
+build_and_train_STFT = True
+stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
 build_and_train_DWT = False
 build_and_train_Raw_MaxPool = False
 manual_evaluation = False
@@ -61,8 +61,8 @@ manual_evaluation = False
 # Preprocess Parameters
 SPECTROGRAM_TYPE = "mel"
 SPEC_FREQ_SCALE = "mel"
-FRAME_SIZE = 1024
-HOP_SIZE = 256
+FRAME_SIZE = 2048
+HOP_SIZE = 512
 MEL_BINS = 128
 CWT_FREQ_SCALES = 64
 CWT_WAVELET = "morl"
@@ -72,11 +72,11 @@ IMG_SIZE_X, IMG_SIZE_Y = 224, 224
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 200  # config.get("epochs")
+TRAIN_EPOCHS = 10  # config.get("epochs")
 # BATCH_SIZE = 0
 
 # Evalutation Parameters
-USE_DEF_CROSS_VAL = True
+USE_DEF_CROSS_VAL = False
 USE_RAND_CROSS_VAL = False
 CROSS_VAL_FOLDS = 4
 CURRENT_FOLD = 10        # used for cross-val when each fold is run on it's own
@@ -273,7 +273,7 @@ if build_and_train_DWT:
 
             # Build and train model
             model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
-                                                     amount_features=126)
+                                                     amount_features=135)
 
             # Collect evaluation data
             test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)

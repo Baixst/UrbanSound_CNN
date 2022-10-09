@@ -122,6 +122,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\metadata\def_folds\train10.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\metadata\def_folds\val1.csv">
           <value>
             <Attribute>

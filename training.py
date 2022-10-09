@@ -6,6 +6,7 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     print("TRAINING OWN DEFAULT CNN")
 
     # CREATE MODEL CNN ARCHITECTURE
+    """
     model = keras.Sequential()
     model.add(keras.layers.Conv2D(64, (5, 5), input_shape=(img_size_x, img_size_y, 1),  padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
@@ -23,8 +24,8 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     # model.add(keras.layers.Dropout(0.3))
     model.add(keras.layers.Dense(64, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
-
     """
+
     model = keras.Sequential()
     model.add(keras.layers.Conv2D(64, (5, 5), input_shape=(img_size_x, img_size_y, 1), padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
@@ -39,7 +40,6 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     # model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dense(64, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
-    """
 
     # model.summary()
 
