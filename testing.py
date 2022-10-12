@@ -16,6 +16,7 @@ import scipy.signal as scsi
 from PIL import Image
 from pylab import *
 import pywt
+import evaluation as eva
 
 
 def findMonoClip(audio_path, target):
@@ -366,7 +367,7 @@ def createDuplicatedWaveFiles(orginal_files, save_path, target_duration, sampler
 
 
 # createCenteredWaveFiles("res/audio", "res/audio_3sec_centered_44khz", 3, 44100)
-createDuplicatedWaveFiles("res/audio", "res/audio_4sec_duplicated_44khz", 4, 44100)
+# createDuplicatedWaveFiles("res/audio", "res/audio_4sec_duplicated_44khz", 4, 44100)
 
 def GetSubtypeOf(filename):
     ob = sf.SoundFile(filename)
@@ -492,4 +493,14 @@ def dwt_test():
     #     mean = statistics.mean(coeffs[i])
     return
 
+
 # dwt_test()
+
+class_names = ['Klimaanlage', 'Hupe', 'Kinder', 'Bellen', 'Bohren', 'Motor',
+               'Schüsse', 'Presslufthammer', 'Sirenen', 'Straßenmusik']
+
+results_csv = "results/crossVal_results.csv"
+predictions_csv = "results/crossVal_predictions.csv"
+
+
+eva.ManualCrossVal_Eval(class_names, results_csv, predictions_csv, 10)

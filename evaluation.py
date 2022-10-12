@@ -103,23 +103,26 @@ def plot_confusion_matrix(class_names, test_acc, predictions, true_labels):
 
     # Plot settings for confusion matrix with standard accuracy
     fig = plt.figure(figsize=(10, 8))
-    sns.heatmap(cm, annot=True, xticklabels=class_names, yticklabels=class_names, fmt='.2g')
-    plt.ylabel("Predicted")
-    plt.xlabel("True")
-    fig.suptitle(("Overall Accuracy = " + str(round(test_acc, 3))))
-    plt.subplots_adjust(left=0.185, bottom=0.225, right=1, top=0.89, wspace=0.2, hspace=0.2)
+    sns.heatmap(cm, annot=True, xticklabels=class_names, yticklabels=class_names, fmt='.2f', cmap="binary",
+                vmin=0, vmax=1, linewidths=0.005, linecolor='#B7B7B7', cbar_kws={'label': 'Genauigkeit'})
+    # plt.colorbar().set_label("Ausgewogene Genauigkeit", size=11)
+    plt.ylabel("Vorhersage", fontsize=11)
+    plt.xlabel("Echte Klasse", fontsize=11)
+    fig.suptitle(("Genauigkeit = " + str(round(test_acc, 3))), fontsize=13)
+    plt.subplots_adjust(left=0.27, bottom=0.352, right=0.905, top=0.92, wspace=0.2, hspace=0.2)
     fig.savefig("results/ConfusionMatrix_Normal.png", bbox_inches='tight')
-    # plt.show()
+    plt.show()
 
     # Same again but for balanced accuracy
     fig = plt.figure(figsize=(10, 8))
-    sns.heatmap(cm_balanced, annot=True, xticklabels=class_names, yticklabels=class_names, fmt='.2g')
-    plt.ylabel("Predicted")
-    plt.xlabel("True")
-    fig.suptitle(("Balanced Accuracy = " + str(round(balanced_acc, 3))))
-    plt.subplots_adjust(left=0.185, bottom=0.225, right=1, top=0.89, wspace=0.2, hspace=0.2)
+    sns.heatmap(cm_balanced, annot=True, xticklabels=class_names, yticklabels=class_names, fmt='.2f', cmap="binary",
+                vmin=0, vmax=1, linewidths=0.005, linecolor='#B7B7B7', cbar_kws={'label': 'Ausgewogene Genauigkeit'})
+    plt.ylabel("Vorhersage", fontsize=11)
+    plt.xlabel("Echte Klasse", fontsize=11)
+    fig.suptitle(("Ausgewogene Genauigkeit = " + str(round(balanced_acc, 3))), fontsize=13)
+    plt.subplots_adjust(left=0.27, bottom=0.352, right=0.905, top=0.92, wspace=0.2, hspace=0.2)
     fig.savefig("results/ConfusionMatrix_Balanced.png", bbox_inches='tight')
-    # plt.show()
+    plt.show()
 
     return
 
@@ -220,49 +223,74 @@ def write_predictions_to_csv(predictions, true_lables, fold):
     return
 
 
-def plot_accuracy_over_epochs(acc_arr, val_acc_arr):
+def plot_accuracy_over_epochs(acc_arr, val_acc_arr, std_acc=None, std_val_acc=None):
     epochs = range(1, len(acc_arr) + 1)
     fig = plt.figure(figsize=(10, 7))
 
-    plt.plot(epochs, acc_arr, color='blue', label='Training acc')
-    plt.plot(epochs, val_acc_arr, color='#FFA359', label='Validation acc')  # Hexcode for orange
-    plt.title('Training and validation accuracy')
-    plt.xlabel('Epochs')
-    plt.ylabel('Accucary')
+    plt.plot(epochs, acc_arr, color='blue', label='Trainingsgenauigkeit')
+    plt.plot(epochs, val_acc_arr, color='#FFA359', label='Testgenauigkeit')  # Hexcode for orange
+
+    if std_acc is not None and std_val_acc is not None:
+        acc_error = std_acc
+        val_acc_error = std_val_acc
+        plt.errorbar(epochs, acc_arr, yerr=acc_error, fmt='none')
+        plt.errorbar(epochs, val_acc_arr, yerr=val_acc_error, fmt='none')
+
+    plt.suptitle('Trainings- und Testgenauigkeit', fontsize=13)
+    plt.xlabel('Epoche', fontsize=11)
+    plt.ylabel('Genauigkeit', fontsize=11)
+    plt.subplots_adjust(left=0.11, bottom=0.11, right=0.93, top=0.92, wspace=0.2, hspace=0.2)
     plt.ylim([0, 1])
     plt.xlim(0, len(acc_arr)+1)
     plt.legend()
 
     fig.savefig("results/AccuracyPlot.png", bbox_inches='tight')
-    # plt.show()
+    plt.show()
     return
 
 
-def plot_loss_over_epochs(loss_arr, val_loss_arr):
+def plot_loss_over_epochs(loss_arr, val_loss_arr, std_loss=None, std_val_loss=None):
     epochs = range(1, len(loss_arr) + 1)
     fig = plt.figure(figsize=(10, 7))
 
-    plt.plot(epochs, loss_arr, color='blue', label='Training loss')
-    plt.plot(epochs, val_loss_arr, color='#FFA359', label='Validation loss')  # Hexcode for orange
-    plt.title('Training and validation loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
+    plt.plot(epochs, loss_arr, color='blue', label='Trainingsverlust')
+    plt.plot(epochs, val_loss_arr, color='#FFA359', label='Testverlust')  # Hexcode for orange
+
+    if std_loss is not None and std_val_loss is not None:
+        loss_error = std_loss
+        val_loss_error = std_val_loss
+        plt.errorbar(epochs, loss_arr, yerr=loss_error, fmt='none')
+        plt.errorbar(epochs, val_loss_arr, yerr=val_loss_error, fmt='none')
+
+    plt.suptitle('Trainings- und Testverlust', fontsize=13)
+    plt.subplots_adjust(left=0.11, bottom=0.11, right=0.93, top=0.92, wspace=0.2, hspace=0.2)
+    plt.xlabel('Epoche', fontsize=11)
+    plt.ylabel('Verlust', fontsize=11)
     plt.xlim(0, len(loss_arr) + 1)
     plt.legend()
 
     fig.savefig("results/LossPlot.png", bbox_inches='tight')
-    # plt.show()
+    plt.show()
     return
 
 
 def ManualCrossVal_Eval(class_names, results_csv, predictions_csv, folds):
+    csv_results = utils.ReadResultsFromCSV(results_csv, folds)
 
-    acc_arr, val_acc_arr, loss_arr, val_loss_arr = utils.ReadResultsFromCSV(results_csv, folds)
+    acc_arr = csv_results[0]
+    val_acc_arr = csv_results[1]
+    loss_arr = csv_results[2]
+    val_loss_arr = csv_results[3]
+    std_acc = csv_results[4]
+    std_val_acc = csv_results[5]
+    std_loss = csv_results[6]
+    std_val_loss = csv_results[7]
+
     test_acc = val_acc_arr[val_acc_arr.size - 1]
 
     # plot the results
-    plot_accuracy_over_epochs(acc_arr, val_acc_arr)
-    plot_loss_over_epochs(loss_arr, val_loss_arr)
+    # plot_accuracy_over_epochs(acc_arr, val_acc_arr, std_acc, std_val_acc)
+    # plot_loss_over_epochs(loss_arr, val_loss_arr, std_loss, std_val_loss)
 
     pred_tensor, true_lables = utils.ReadPredictionsFromCSV(predictions_csv)
 

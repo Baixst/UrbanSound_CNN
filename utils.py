@@ -174,7 +174,41 @@ def ReadResultsFromCSV(results_csv, folds):
     loss_arr = loss_arr / folds
     val_loss_arr = val_loss_arr / folds
 
-    return acc_arr, val_acc_arr, loss_arr, val_loss_arr
+    std_acc, std_val_acc, std_loss, std_val_loss = get_std_deviations_per_epoch(df, folds)
+
+    ret_arr = [acc_arr, val_acc_arr, loss_arr, val_loss_arr, std_acc, std_val_acc, std_loss, std_val_loss]
+    # print(ret_arr.shape())
+
+    return ret_arr
+
+def get_std_deviations_per_epoch(df, folds):
+
+    epochs = df["Epoch"].max()
+    full_acc = np.zeros((epochs, folds))
+    full_val_acc = np.zeros((epochs, folds))
+    full_loss = np.zeros((epochs, folds))
+    full_val_loss = np.zeros((epochs, folds))
+
+    for index, row in df.iterrows():
+        epoch = int(row["Epoch"]) - 1
+        fold = int(row["Fold"]) - 1
+        full_acc[epoch][fold] = float(row["Accuracy"])
+        full_val_acc[epoch][fold] = float(row["Val-Accuracy"])
+        full_loss[epoch][fold] = float(row["Loss"])
+        full_val_loss[epoch][fold] = float(row["Val-Loss"])
+
+    std_acc = np.zeros(epochs)
+    std_val_acc = np.zeros(epochs)
+    std_loss = np.zeros(epochs)
+    std_val_loss = np.zeros(epochs)
+
+    for i in range(epochs):
+        std_acc[i] = np.std(full_acc[i])
+        std_val_acc[i] = np.std(full_val_acc[i])
+        std_loss[i] = np.std(full_loss[i])
+        std_val_loss[i] = np.std(full_val_loss[i])
+
+    return std_acc, std_val_acc, std_loss, std_val_loss
 
 
 def ReadPredictionsFromCSV(predictions_csv):

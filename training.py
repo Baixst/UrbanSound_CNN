@@ -18,11 +18,11 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
-    # model.add(keras.layers.Flatten())
-    model.add(keras.layers.GlobalAveragePooling2D())
-    # model.add(keras.layers.Dense(256, activation='relu'))
-    # model.add(keras.layers.Dropout(0.3))
-    model.add(keras.layers.Dense(64, activation='relu'))
+    model.add(keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(keras.layers.Flatten())
+    # model.add(keras.layers.GlobalAveragePooling2D())
+    model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
     """
 
@@ -35,16 +35,16 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
-    # model.add(keras.layers.Flatten())
-    model.add(keras.layers.GlobalAveragePooling2D())
-    # model.add(keras.layers.Dense(256, activation='relu'))
-    model.add(keras.layers.Dense(64, activation='relu'))
+    model.add(keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same'))
+    model.add(keras.layers.Flatten())
+    # model.add(keras.layers.GlobalAveragePooling2D())
+    model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
 
     # model.summary()
 
     # TRAIN MODEL
-    optimizer = keras.optimizers.Adam(learning_rate=0.0005)
+    optimizer = keras.optimizers.Adam(learning_rate=0.0002)
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
@@ -106,7 +106,7 @@ def Build_Train_OwnResNet(train_data, train_labels, test_data, test_labels, epoc
     X = tf.keras.layers.MaxPool2D(pool_size=3, strides=2, padding='same')(X)
 
     # Define size of sub-blocks and initial filter size
-    block_layers = [2, 2, 2, 2]  # how often a resblock is repeated before decreasing the dimension
+    block_layers = [2, 2, 2]  # how often a resblock is repeated before decreasing the dimension
     filter_size = 64
 
     # Step 3 Add the Resnet Blocks
@@ -166,11 +166,11 @@ def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, 
     '''
     model = keras.Sequential()
     model.add(keras.layers.Dense(amount_features, activation='sigmoid', input_shape=(amount_features,)))
-    model.add(keras.layers.Dense(800, activation='relu'))  # 150    0,511
-    model.add(keras.layers.Dense(400, activation='relu'))  # nicht vorhanden
+    model.add(keras.layers.Dense(700, activation='relu'))  # 150    0,511
+    model.add(keras.layers.Dense(350, activation='relu'))  # nicht vorhanden
     model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(200, activation='relu'))   # 80
-    model.add(keras.layers.Dense(100, activation='relu'))  # nicht vorhanden
+    model.add(keras.layers.Dense(150, activation='relu'))   # 80
+    model.add(keras.layers.Dense(75, activation='relu'))  # nicht vorhanden
     model.add(keras.layers.Dropout(0.2))
     model.add(keras.layers.Dense(30, activation='relu'))   # 30
     model.add(keras.layers.Dense(10, activation='softmax'))
@@ -189,36 +189,6 @@ def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, 
 
     trainingTime = datetime.datetime.now() - startTime
     print("Time until training finished: " + str(trainingTime))
-
-    return model, history
-
-
-def Build_Train_MaxPool1D(train_data, train_labels, test_data, test_labels, epochs, audio_duration, samplerate):
-    inputs = int(audio_duration * samplerate)
-
-    # CREATE MODEL ARCHITECTURE
-    model = keras.Sequential()
-    model.add(keras.layers.MaxPooling1D(pool_size=4, strides=4, input_shape=(inputs, 1)))
-    model.add(keras.layers.MaxPooling1D(pool_size=2, strides=2))
-    model.add(keras.layers.MaxPooling1D(pool_size=2, strides=2))
-    model.add(keras.layers.Conv1D(64, 4, strides=2, activation='relu'))
-    model.add(keras.layers.MaxPooling1D(pool_size=2, strides=2))
-    model.add(keras.layers.Dropout(0.1))
-    model.add(keras.layers.Conv1D(128, 2, activation='relu'))
-
-    model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(128, activation='relu'))
-    model.add(keras.layers.Dropout(0.1))
-    model.add(keras.layers.Dense(32, activation='relu'))
-    model.add(keras.layers.Dense(10, activation='softmax'))
-
-    # TRAIN MODEL
-    model.compile(optimizer='adam',
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
-                  metrics=['accuracy'])
-
-    history = model.fit(train_data, train_labels, epochs=epochs,
-                        validation_data=(test_data, test_labels))  # ,callbacks=[WandbCallback()]
 
     return model, history
 

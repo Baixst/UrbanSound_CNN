@@ -36,9 +36,9 @@ if gpus:
 
 # Path Parameters
 AUDIO_PATH = "res/audio_4sec_duplicated_44khz"                             # not used for training, only for preprocessing tasks
-IMAGE_PATH = "res/img_4sec_dup_224x224_44khz_bigFrame"
+IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
-DWT_FEATURES_CSV = "res/dwt_features_3sec_dup_44khz.csv"                   # dwt features for training dense net
+DWT_FEATURES_CSV = "res/dwt_features_3sec_cen_44khz.csv"                   # dwt features for training dense net
 TRAIN_CSV = "metadata/Trainfiles.csv"
 TEST_CSV = "metadata/Testfiles.csv"                               # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
@@ -52,10 +52,9 @@ collect_dwt_data = False
 create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = True
+build_and_train_STFT = False
 stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
-build_and_train_DWT = False
-build_and_train_Raw_MaxPool = False
+build_and_train_DWT = True
 manual_evaluation = False
 
 # Preprocess Parameters
@@ -68,11 +67,11 @@ CWT_FREQ_SCALES = 64
 CWT_WAVELET = "morl"
 
 # Image Parameters
-IMG_SIZE_X, IMG_SIZE_Y = 224, 224
+IMG_SIZE_X, IMG_SIZE_Y = 128, 128
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 10  # config.get("epochs")
+TRAIN_EPOCHS = 20  # config.get("epochs")
 # BATCH_SIZE = 0
 
 # Evalutation Parameters
@@ -81,8 +80,8 @@ USE_RAND_CROSS_VAL = False
 CROSS_VAL_FOLDS = 4
 CURRENT_FOLD = 10        # used for cross-val when each fold is run on it's own
 
-CLASS_NAMES = ['air_conditioner', 'car_horn', 'children_playing', 'dog_bark', 'drilling', 'engine_idling',
-               'gun_shot', 'jackhammer', 'siren', 'street_music']
+CLASS_NAMES = ['Klimaanlage', 'Hupe', 'Kinder', 'Bellen', 'Bohren', 'Motor',
+               'Schüsse', 'Presslufthammer', 'Sirenen', 'Straßenmusik']
 
 # CREATE SPECTROGRAMS
 # use Short Time Fourier Transform
@@ -94,7 +93,7 @@ if create_spectrograms:
 
 # use Wavelet Transform
 if collect_dwt_data:
-    pp.dwt_feature_extraction(AUDIO_PATH, DWT_FEATURES_CSV, 44100)
+    pp.dwt_feature_extraction_V5(AUDIO_PATH, DWT_FEATURES_CSV, 44100)
 if create_cwt_scalograms:
     pp.CreateCWTScaleograms(AUDIO_PATH, IMAGE_PATH, freq_scales=CWT_FREQ_SCALES, wavelet=CWT_WAVELET,
                             px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y, monitor_dpi=MY_DPI, fill_mode="centered")
@@ -273,7 +272,7 @@ if build_and_train_DWT:
 
             # Build and train model
             model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
-                                                     amount_features=135)
+                                                     amount_features=780)
 
             # Collect evaluation data
             test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)
@@ -307,7 +306,7 @@ if build_and_train_DWT:
 
         print("<--- TRAINING 1/1 ---")
         model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
-                                             amount_features=504)
+                                             amount_features=135)
 
         histories = [history]
 
@@ -317,25 +316,6 @@ if build_and_train_DWT:
         print("---------------------------- \nEvaluation of Model:")
         test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)
         eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testFeat, testLabels, CURRENT_FOLD)
-
-if build_and_train_Raw_MaxPool:
-    # LOAD DATASET
-    trainData, trainLabels, testData, testLabels = loader.GenerateArrays_Raw(TRAIN_CSV, TEST_CSV, AUDIO_PATH,
-                                                                             3, 22050)
-    print("Finished Loading Data")
-
-    print("<--- TRAINING 1/1 ---")
-    model, history = train.Build_Train_MaxPool1D(trainData, trainLabels, testData, testLabels, epochs=TRAIN_EPOCHS,
-                                             audio_duration=3, samplerate=22050)
-
-    histories = [history]
-
-    # EVALUATE MODEL
-    print("------------------- \nHistory:")
-    eva.evaluate_epochs(histories)
-    print("---------------------------- \nEvaluation of Model:")
-    test_loss, test_acc = model.evaluate(testData, testLabels, verbose=2)
-    eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testData, testLabels, CURRENT_FOLD)
 
 if manual_evaluation:
     eva.ManualCrossVal_Eval(CLASS_NAMES, CROSS_VAL_RESULTS, CROSS_VAL_PREDICTIONS, 10)
