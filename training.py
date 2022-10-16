@@ -1,31 +1,13 @@
 import tensorflow as tf
 from tensorflow import keras
 import datetime
+import os
 
-def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, img_size_x, img_size_y):
+def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, img_size_x, img_size_y,
+                      load_weights=False, checkpoint_to_load="models/default_cnn/"):
     print("TRAINING OWN DEFAULT CNN")
 
     # CREATE MODEL CNN ARCHITECTURE
-    """
-    model = keras.Sequential()
-    model.add(keras.layers.Conv2D(64, (5, 5), input_shape=(img_size_x, img_size_y, 1),  padding='same'))
-    model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same'))
-    model.add(keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same'))
-    model.add(keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same'))
-    model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
-    model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
-    model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
-    model.add(keras.layers.MaxPooling2D((2, 2)))
-    model.add(keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same'))
-    model.add(keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same'))
-    model.add(keras.layers.Flatten())
-    # model.add(keras.layers.GlobalAveragePooling2D())
-    model.add(keras.layers.Dense(256, activation='relu'))
-    model.add(keras.layers.Dense(10, activation='softmax'))
-    """
-
     model = keras.Sequential()
     model.add(keras.layers.Conv2D(64, (5, 5), input_shape=(img_size_x, img_size_y, 1), padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
@@ -36,31 +18,45 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same'))
-    model.add(keras.layers.Flatten())
     # model.add(keras.layers.GlobalAveragePooling2D())
+    model.add(keras.layers.Flatten())
     model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
 
-    # model.summary()
-
-    # TRAIN MODEL
+    # COMPILE MODEL
     optimizer = keras.optimizers.Adam(learning_rate=0.0002)
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
 
-    startTime = datetime.datetime.now()
+    # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
+    checkpoint_path = "models/default_cnn/cp-{epoch:03d}"
 
-    history = model.fit(train_data, train_labels, epochs=epochs,
-                        validation_data=(test_data, test_labels))  # ,callbacks=[WandbCallback()]
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path,
+        save_weights_only=True,
+        save_freq='epoch'
+    )
 
-    trainingTime = datetime.datetime.now() - startTime
-    print("Time until training finished: " + str(trainingTime))
+    # TRAIN MODEL
+    if not load_weights:
+        startTime = datetime.datetime.now()
+
+        history = model.fit(train_data, train_labels, epochs=epochs,
+                            validation_data=(test_data, test_labels), callbacks=[model_checkpoint_callback])
+
+        trainingTime = datetime.datetime.now() - startTime
+        print("Time until training finished: " + str(trainingTime))
+
+    else:
+        model.load_weights(checkpoint_to_load)
+        history = None
 
     return model, history
 
 
-def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epochs):
+def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epochs, load_weights=False,
+                         checkpoint_to_load="models/ResNet/"):
     print("TRAINING RESNET50")
 
     # Load ResNet and freeze all layers
@@ -75,6 +71,8 @@ def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epoch
     predictions = keras.layers.Dense(10, activation='softmax')(x)
 
     head_model = keras.Model(inputs=base_model.input, outputs=predictions)
+
+    # COMPILE MODEL
     optimizer = keras.optimizers.Adam(learning_rate=0.001)
     head_model.compile(optimizer=optimizer,
                        loss=keras.losses.sparse_categorical_crossentropy,
@@ -82,18 +80,34 @@ def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epoch
 
     # head_model.summary()
 
-    startTime = datetime.datetime.now()
+    # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
+    checkpoint_path = "models/ResNet/cp-{epoch:03d}"
 
-    history = head_model.fit(train_data, train_labels, epochs=epochs,
-                        validation_data=(test_data, test_labels))  # ,callbacks=[WandbCallback()]
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path,
+        save_weights_only=True,
+        save_freq='epoch'
+    )
 
-    trainingTime = datetime.datetime.now() - startTime
-    print("Time until training finished: " + str(trainingTime))
+    # TRAIN MODEL
+    if not load_weights:
+        startTime = datetime.datetime.now()
+
+        history = head_model.fit(train_data, train_labels, epochs=epochs,
+                            validation_data=(test_data, test_labels), callbacks=[model_checkpoint_callback])
+
+        trainingTime = datetime.datetime.now() - startTime
+        print("Time until training finished: " + str(trainingTime))
+
+    else:
+        head_model.load_weights(checkpoint_to_load)
+        history = None
 
     return head_model, history
 
 
-def Build_Train_OwnResNet(train_data, train_labels, test_data, test_labels, epochs, img_size_x, img_size_y):
+def Build_Train_OwnResNet(train_data, train_labels, test_data, test_labels, epochs, img_size_x, img_size_y,
+                          load_weights=False, checkpoint_to_load="models/own_ResNet/"):
     print("TRAINING OWN RESNET")
 
     X_input = keras.layers.Input((img_size_x, img_size_y, 1))
@@ -124,43 +138,55 @@ def Build_Train_OwnResNet(train_data, train_labels, test_data, test_labels, epoc
                 X = res_ident_block(X, filter_size)
 
     # Step 4 End Dense Network
-    # X = tf.keras.layers.AveragePooling2D((2, 2), padding='same')(X)
-    # X = tf.keras.layers.Flatten()(X)
-    # X = tf.keras.layers.Dense(512, activation='relu')(X)
     X = keras.layers.GlobalAveragePooling2D()(X)
     X = tf.keras.layers.Dense(10, activation='softmax')(X)
+    # X = tf.keras.layers.Dense(256, activation='relu')(X)
     model = tf.keras.models.Model(inputs=X_input, outputs=X, name="OwnResNet")
 
-    model.summary()
-
-    # TRAIN MODEL
+    # COMPILE MODEL
     optimizer = keras.optimizers.Adam(learning_rate=0.0005)
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
 
-    startTime = datetime.datetime.now()
+    # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
+    checkpoint_path = "models/own_ResNet/cp-{epoch:03d}"
 
-    history = model.fit(train_data, train_labels, epochs=epochs,
-                        validation_data=(test_data, test_labels))  # ,callbacks=[WandbCallback()]
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path,
+        save_weights_only=True,
+        save_freq='epoch'
+    )
 
-    trainingTime = datetime.datetime.now() - startTime
-    print("Time until training finished: " + str(trainingTime))
+    # TRAIN MODEL
+    if not load_weights:
+        startTime = datetime.datetime.now()
+
+        history = model.fit(train_data, train_labels, epochs=epochs,
+                        validation_data=(test_data, test_labels), callbacks=[model_checkpoint_callback])
+
+        trainingTime = datetime.datetime.now() - startTime
+        print("Time until training finished: " + str(trainingTime))
+
+    else:
+        model.load_weights(checkpoint_to_load)
+        history = None
 
     return model, history
 
 
-def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, amount_features):
+def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, amount_features, load_weights=False,
+                      checkpoint_to_load="models/dense_dwt/"):
     # CREATE MODEL CNN ARCHITECTURE
 
     # Model for coeffs without segmentation
     model = keras.Sequential()
     model.add(keras.layers.Dense(amount_features, activation='sigmoid', input_shape=(amount_features,)))
-    model.add(keras.layers.Dense(110, activation='relu'))
+    model.add(keras.layers.Dense(120, activation='relu'))  # 120 für V1
     model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(60, activation='relu'))
+    model.add(keras.layers.Dense(60, activation='relu'))   # 60
     model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(30, activation='relu'))
+    model.add(keras.layers.Dense(35, activation='relu'))   # 30
     model.add(keras.layers.Dense(10, activation='softmax'))
 
     '''
@@ -176,19 +202,33 @@ def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Dense(10, activation='softmax'))
     '''
 
-    # TRAIN MODEL
-    optimizer = keras.optimizers.Adam(learning_rate=0.0001)
+    # COMPILE MODEL
+    optimizer = keras.optimizers.Adam(learning_rate=0.0002)
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
 
-    startTime = datetime.datetime.now()
+    # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
+    checkpoint_path = "models/dense_dwt/cp-{epoch:03d}"
 
-    history = model.fit(train_data, train_labels, epochs=epochs, batch_size=64,
-                        validation_data=(test_data, test_labels))  # ,callbacks=[WandbCallback()]
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path,
+        save_weights_only=True,
+        save_freq='epoch'
+    )
 
-    trainingTime = datetime.datetime.now() - startTime
-    print("Time until training finished: " + str(trainingTime))
+    # TRAIN MODEL
+    if not load_weights:
+        startTime = datetime.datetime.now()
+        history = model.fit(train_data, train_labels, epochs=epochs, batch_size=64,
+                            validation_data=(test_data, test_labels), callbacks=[model_checkpoint_callback])
+
+        trainingTime = datetime.datetime.now() - startTime
+        print("Time until training finished: " + str(trainingTime))
+
+    else:
+        model.load_weights(checkpoint_to_load)
+        history = None
 
     return model, history
 

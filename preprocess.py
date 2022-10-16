@@ -89,7 +89,7 @@ def dwt_feature_extraction(audio_path, dwt_feature_csv, samplerate, wavelet="db1
         # 1. Read Audio file
         data, sr = librosa.load(file_path, sr=samplerate)
         # data = data / max(data)
-        # data = data[0:131072]  # results in center 131.072 samples of 3 sec clip
+        data = data[614:131686]  # results in center 131.072 samples of 3 sec clip
         # max_level = pywt.dwt_max_level(len(data), wavelet) - 1
 
         coeffs = pywt.wavedec(data, wavelet, level=14, mode="symmetric")
@@ -537,6 +537,9 @@ def dwt_feature_extractionV3(audio_path, dwt_feature_csv, samplerate, wavelet="d
 def dwt_feature_extraction_V4(audio_path, dwt_feature_csv, samplerate, wavelet="db1"):
     """
     Extract Detail- and Approx- Coeffs, build features from them and write results to csv file
+    Use 1 Segment that is 131.072 (ca. 3sec) long
+    Compared to V1 power, energy and zero-crossing-rate is added
+    Uses 14 (15 with approx.) DWT Levels with 12 featuers per level (resulting in 180 features)
     """
 
     file_list = os.listdir(audio_path)
@@ -546,7 +549,7 @@ def dwt_feature_extraction_V4(audio_path, dwt_feature_csv, samplerate, wavelet="
     data_writer = csv.writer(dataCSV)
     csvHeader = ["audio_file"]
     # write first csv line
-    for i in range(1, 15):  # second parameter is dwt max level+2
+    for i in range(1, 16):  # second parameter is dwt max level+2
         csvHeader.append("entropie_" + str(i))
         csvHeader.append("mean_" + str(i))
         csvHeader.append("variance_" + str(i))
@@ -556,8 +559,8 @@ def dwt_feature_extraction_V4(audio_path, dwt_feature_csv, samplerate, wavelet="
         csvHeader.append("kurtosis_" + str(i))
         csvHeader.append("standard_error_mean_" + str(i))
         csvHeader.append("median_abs_deviation_" + str(i))
-        csvHeader.append("energy_" + str(i))
-        csvHeader.append("avg_power_" + str(i))
+        # csvHeader.append("energy_" + str(i))
+        # csvHeader.append("avg_power_" + str(i))
         csvHeader.append("zero_cross_rate_" + str(i))
     data_writer.writerow(csvHeader)
 
@@ -583,8 +586,8 @@ def dwt_feature_extraction_V4(audio_path, dwt_feature_csv, samplerate, wavelet="
             kurtosis = scipy.stats.kurtosis(coeffs[i])
             standard_error_mean = scipy.stats.sem(coeffs[i])
             median_abs_deviation = scipy.stats.median_abs_deviation(coeffs[i])
-            energy = sum(abs(coeffs[i]**2))
-            avg_power = (1 / (2*len(coeffs[i]) + 1)) * energy
+            # energy = sum(abs(coeffs[i]**2))
+            # avg_power = (1 / (2*len(coeffs[i]) + 1)) * energy
             zero_cross_arr = librosa.feature.zero_crossing_rate(coeffs[i],
                                                     frame_length=len(coeffs[i]), hop_length=len(coeffs[i])+1)
             zero_cross_rate = zero_cross_arr[0][0]
@@ -598,11 +601,9 @@ def dwt_feature_extraction_V4(audio_path, dwt_feature_csv, samplerate, wavelet="
             line.append(kurtosis)
             line.append(standard_error_mean)
             line.append(median_abs_deviation)
-            line.append(energy)
-            line.append(avg_power)
+            # line.append(energy)
+            # line.append(avg_power)
             line.append(zero_cross_rate)
-
-        # zero_crossing_rate
 
         data_writer.writerow(line)
         files_done += 1
@@ -637,8 +638,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
         csvHeader.append("kurtosis_" + str(i))
         csvHeader.append("standard_error_mean_" + str(i))
         csvHeader.append("median_abs_deviation_" + str(i))
-        csvHeader.append("energy_" + str(i))
-        csvHeader.append("avg_power_" + str(i))
+        # csvHeader.append("energy_" + str(i))
+        # csvHeader.append("avg_power_" + str(i))
         csvHeader.append("zero_cross_rate_" + str(i))
 
         csvHeader.append("entropie_" + str(i + 1))
@@ -650,8 +651,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
         csvHeader.append("kurtosis_" + str(i + 1))
         csvHeader.append("standard_error_mean_" + str(i + 1))
         csvHeader.append("median_abs_deviation_" + str(i + 1))
-        csvHeader.append("energy_" + str(i + 1))
-        csvHeader.append("avg_power_" + str(i + 1))
+        # csvHeader.append("energy_" + str(i))
+        # csvHeader.append("avg_power_" + str(i))
         csvHeader.append("zero_cross_rate_" + str(i + 1))
 
         csvHeader.append("entropie_" + str(i + 2))
@@ -663,8 +664,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
         csvHeader.append("kurtosis_" + str(i + 2))
         csvHeader.append("standard_error_mean_" + str(i + 2))
         csvHeader.append("median_abs_deviation_" + str(i + 2))
-        csvHeader.append("energy_" + str(i + 2))
-        csvHeader.append("avg_power_" + str(i + 2))
+        # csvHeader.append("energy_" + str(i))
+        # csvHeader.append("avg_power_" + str(i))
         csvHeader.append("zero_cross_rate_" + str(i + 2))
 
         csvHeader.append("entropie_" + str(i + 3))
@@ -676,8 +677,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
         csvHeader.append("kurtosis_" + str(i + 3))
         csvHeader.append("standard_error_mean_" + str(i + 3))
         csvHeader.append("median_abs_deviation_" + str(i + 3))
-        csvHeader.append("energy_" + str(i + 3))
-        csvHeader.append("avg_power_" + str(i + 3))
+        # csvHeader.append("energy_" + str(i))
+        # csvHeader.append("avg_power_" + str(i))
         csvHeader.append("zero_cross_rate_" + str(i + 3))
 
         csvHeader.append("entropie_" + str(i + 4))
@@ -689,8 +690,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
         csvHeader.append("kurtosis_" + str(i + 4))
         csvHeader.append("standard_error_mean_" + str(i + 4))
         csvHeader.append("median_abs_deviation_" + str(i + 4))
-        csvHeader.append("energy_" + str(i + 4))
-        csvHeader.append("avg_power_" + str(i + 4))
+        # csvHeader.append("energy_" + str(i))
+        # csvHeader.append("avg_power_" + str(i))
         csvHeader.append("zero_cross_rate_" + str(i + 4))
 
         i += 5
@@ -762,16 +763,16 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
             median_abs_deviation3 = scipy.stats.median_abs_deviation(coeffs3[i])
             median_abs_deviation4 = scipy.stats.median_abs_deviation(coeffs4[i])
             median_abs_deviation5 = scipy.stats.median_abs_deviation(coeffs5[i])
-            energy1 = sum(abs(coeffs1[i] ** 2))
-            energy2 = sum(abs(coeffs2[i] ** 2))
-            energy3 = sum(abs(coeffs3[i] ** 2))
-            energy4 = sum(abs(coeffs4[i] ** 2))
-            energy5 = sum(abs(coeffs5[i] ** 2))
-            avg_power1 = (1 / (2 * len(coeffs1[i]) + 1)) * energy1
-            avg_power2 = (1 / (2 * len(coeffs2[i]) + 1)) * energy2
-            avg_power3 = (1 / (2 * len(coeffs3[i]) + 1)) * energy3
-            avg_power4 = (1 / (2 * len(coeffs4[i]) + 1)) * energy4
-            avg_power5 = (1 / (2 * len(coeffs5[i]) + 1)) * energy5
+            # energy1 = sum(abs(coeffs1[i] ** 2))
+            # energy2 = sum(abs(coeffs2[i] ** 2))
+            # energy3 = sum(abs(coeffs3[i] ** 2))
+            # energy4 = sum(abs(coeffs4[i] ** 2))
+            # energy5 = sum(abs(coeffs5[i] ** 2))
+            # avg_power1 = (1 / (2 * len(coeffs1[i]) + 1)) * energy1
+            # avg_power2 = (1 / (2 * len(coeffs2[i]) + 1)) * energy2
+            # avg_power3 = (1 / (2 * len(coeffs3[i]) + 1)) * energy3
+            # avg_power4 = (1 / (2 * len(coeffs4[i]) + 1)) * energy4
+            # avg_power5 = (1 / (2 * len(coeffs5[i]) + 1)) * energy5
 
             zero_cross_arr = librosa.feature.zero_crossing_rate(coeffs1[i], frame_length=len(coeffs1[i]),
                                                                 hop_length=len(coeffs1[i]) + 1)
@@ -798,8 +799,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
             line.append(kurtosis1)
             line.append(standard_error_mean1)
             line.append(median_abs_deviation1)
-            line.append(energy1)
-            line.append(avg_power1)
+            # line.append(energy1)
+            # line.append(avg_power1)
             line.append(zero_cross_rate1)
 
             line.append(shannon_ent2)
@@ -811,8 +812,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
             line.append(kurtosis2)
             line.append(standard_error_mean2)
             line.append(median_abs_deviation2)
-            line.append(energy2)
-            line.append(avg_power2)
+            # line.append(energy1)
+            # line.append(avg_power1)
             line.append(zero_cross_rate2)
 
             line.append(shannon_ent3)
@@ -824,8 +825,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
             line.append(kurtosis3)
             line.append(standard_error_mean3)
             line.append(median_abs_deviation3)
-            line.append(energy3)
-            line.append(avg_power3)
+            # line.append(energy1)
+            # line.append(avg_power1)
             line.append(zero_cross_rate3)
 
             line.append(shannon_ent4)
@@ -837,8 +838,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
             line.append(kurtosis4)
             line.append(standard_error_mean4)
             line.append(median_abs_deviation4)
-            line.append(energy4)
-            line.append(avg_power4)
+            # line.append(energy1)
+            # line.append(avg_power1)
             line.append(zero_cross_rate4)
 
             line.append(shannon_ent5)
@@ -850,8 +851,8 @@ def dwt_feature_extraction_V5(audio_path, dwt_feature_csv, samplerate, wavelet="
             line.append(kurtosis5)
             line.append(standard_error_mean5)
             line.append(median_abs_deviation5)
-            line.append(energy5)
-            line.append(avg_power5)
+            # line.append(energy1)
+            # line.append(avg_power1)
             line.append(zero_cross_rate5)
 
         data_writer.writerow(line)

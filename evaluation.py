@@ -233,8 +233,8 @@ def plot_accuracy_over_epochs(acc_arr, val_acc_arr, std_acc=None, std_val_acc=No
     if std_acc is not None and std_val_acc is not None:
         acc_error = std_acc
         val_acc_error = std_val_acc
-        plt.errorbar(epochs, acc_arr, yerr=acc_error, fmt='none')
-        plt.errorbar(epochs, val_acc_arr, yerr=val_acc_error, fmt='none')
+        plt.errorbar(epochs, acc_arr, yerr=acc_error, fmt='none', elinewidth=1.0, color='blue')
+        plt.errorbar(epochs, val_acc_arr, yerr=val_acc_error, fmt='none', elinewidth=1.0, color='#FFA359')
 
     plt.suptitle('Trainings- und Testgenauigkeit', fontsize=13)
     plt.xlabel('Epoche', fontsize=11)
@@ -259,8 +259,8 @@ def plot_loss_over_epochs(loss_arr, val_loss_arr, std_loss=None, std_val_loss=No
     if std_loss is not None and std_val_loss is not None:
         loss_error = std_loss
         val_loss_error = std_val_loss
-        plt.errorbar(epochs, loss_arr, yerr=loss_error, fmt='none')
-        plt.errorbar(epochs, val_loss_arr, yerr=val_loss_error, fmt='none')
+        plt.errorbar(epochs, loss_arr, yerr=loss_error, fmt='none', elinewidth=1.0, color='blue')
+        plt.errorbar(epochs, val_loss_arr, yerr=val_loss_error, fmt='none', elinewidth=1.0, color='#FFA359')
 
     plt.suptitle('Trainings- und Testverlust', fontsize=13)
     plt.subplots_adjust(left=0.11, bottom=0.11, right=0.93, top=0.92, wspace=0.2, hspace=0.2)
@@ -289,12 +289,12 @@ def ManualCrossVal_Eval(class_names, results_csv, predictions_csv, folds):
     test_acc = val_acc_arr[val_acc_arr.size - 1]
 
     # plot the results
-    # plot_accuracy_over_epochs(acc_arr, val_acc_arr, std_acc, std_val_acc)
-    # plot_loss_over_epochs(loss_arr, val_loss_arr, std_loss, std_val_loss)
+    plot_accuracy_over_epochs(acc_arr, val_acc_arr, std_acc, std_val_acc)
+    plot_loss_over_epochs(loss_arr, val_loss_arr, std_loss, std_val_loss)
 
     pred_tensor, true_lables = utils.ReadPredictionsFromCSV(predictions_csv)
 
     # plot confusion matrix
-    plot_confusion_matrix(class_names, test_acc, pred_tensor, true_lables)
+    # plot_confusion_matrix(class_names, test_acc, pred_tensor, true_lables)
 
     return

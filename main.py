@@ -12,7 +12,7 @@ import loading as loader
 # tf.config.experimental.set_visible_devices([], 'GPU')
 
 # trying to solve out of memory error
-
+'''
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
 gpus = tf.config.list_physical_devices('GPU')
@@ -26,19 +26,13 @@ if gpus:
   except RuntimeError as e:
     # Memory growth must be set before GPUs have been initialized
     print(e)
-
-# import wandb
-# from wandb.keras import WandbCallback
-
-# run = wandb.init(project="my-test-project", entity="baixst", config={ "image_type": "stft", "learning_rate": 0.01,
-#                                                                       "epochs": 10, "batch_size": 128})
-# config = wandb.config
+'''
 
 # Path Parameters
-AUDIO_PATH = "res/audio_4sec_duplicated_44khz"                             # not used for training, only for preprocessing tasks
-IMAGE_PATH = "res/img_4sec_cen_128x128_44khz"
+AUDIO_PATH = "res/audio_3sec_duplicated_44khz"                             # not used for training, only for preprocessing tasks
+IMAGE_PATH = "res/test"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
-DWT_FEATURES_CSV = "res/dwt_features_3sec_cen_44khz.csv"                   # dwt features for training dense net
+DWT_FEATURES_CSV = "res/dwt_features_V5_db1_less.csv"               # dwt features for training dense net
 TRAIN_CSV = "metadata/Trainfiles.csv"
 TEST_CSV = "metadata/Testfiles.csv"                               # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
@@ -53,9 +47,11 @@ create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
 build_and_train_STFT = False
-stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
-build_and_train_DWT = True
+stft_model_to_use = "own_ResNet"         # "default", "ResNet", "own_ResNet" is possible
+build_and_train_DWT = False
 manual_evaluation = False
+predict_from_checkpoint = True
+model_to_eval = "own_ResNet"         # "default", "ResNet", "own_ResNet", "dense_dwt" is possible
 
 # Preprocess Parameters
 SPECTROGRAM_TYPE = "mel"
@@ -65,14 +61,14 @@ HOP_SIZE = 512
 MEL_BINS = 128
 CWT_FREQ_SCALES = 64
 CWT_WAVELET = "morl"
+DWT_WAVELET = "db1"
 
 # Image Parameters
-IMG_SIZE_X, IMG_SIZE_Y = 128, 128
+IMG_SIZE_X, IMG_SIZE_Y = 224, 224
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 20  # config.get("epochs")
-# BATCH_SIZE = 0
+TRAIN_EPOCHS = 3
 
 # Evalutation Parameters
 USE_DEF_CROSS_VAL = False
@@ -93,7 +89,7 @@ if create_spectrograms:
 
 # use Wavelet Transform
 if collect_dwt_data:
-    pp.dwt_feature_extraction_V5(AUDIO_PATH, DWT_FEATURES_CSV, 44100)
+    pp.dwt_feature_extraction_V5(AUDIO_PATH, DWT_FEATURES_CSV, 44100, wavelet=DWT_WAVELET)
 if create_cwt_scalograms:
     pp.CreateCWTScaleograms(AUDIO_PATH, IMAGE_PATH, freq_scales=CWT_FREQ_SCALES, wavelet=CWT_WAVELET,
                             px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y, monitor_dpi=MY_DPI, fill_mode="centered")
@@ -230,10 +226,6 @@ if build_and_train_STFT:
         trainImages, testImages = trainImages / 255.0, testImages / 255.0
         print("Normalized Datapoints")
 
-        # Create Validation Dataset
-        # data_val, part_data_train, labels_val, part_labels_train = split.create_validation_dataset(trainImages,
-        #                                                                          trainLabels, VAL_SET_PERCENTAGE)
-
         print("<--- TRAINING 1/1 ---")
         # Train Model
         if stft_model_to_use == "default":
@@ -272,7 +264,7 @@ if build_and_train_DWT:
 
             # Build and train model
             model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
-                                                     amount_features=780)
+                                                     amount_features=650)
 
             # Collect evaluation data
             test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)
@@ -306,7 +298,7 @@ if build_and_train_DWT:
 
         print("<--- TRAINING 1/1 ---")
         model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
-                                             amount_features=135)
+                                             amount_features=150)
 
         histories = [history]
 
@@ -319,3 +311,55 @@ if build_and_train_DWT:
 
 if manual_evaluation:
     eva.ManualCrossVal_Eval(CLASS_NAMES, CROSS_VAL_RESULTS, CROSS_VAL_PREDICTIONS, 10)
+
+if predict_from_checkpoint:
+    if model_to_eval == "dense_dwt":
+        checkpoint_file = "models/dense_dwt/cp-005"
+
+        trainFeat, trainLabels, testFeat, testLabels = loader.GenerateArrays_DWT(TRAIN_CSV, TEST_CSV, DWT_FEATURES_CSV)
+        print("Finished Loading Data")
+        model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
+                                                 amount_features=150, load_weights=True,
+                                                 checkpoint_to_load=checkpoint_file)
+        predictions = model.predict(testFeat)
+
+    if stft_model_to_use == "default":
+        checkpoint_file = "models/default_cnn/cp-004"
+
+        trainImages, trainLabels, testImages, testLabels = loader.GenerateArrays_STFT(TRAIN_CSV, TEST_CSV, IMAGE_PATH,
+                                                                                      IMG_SIZE_X, IMG_SIZE_Y)
+        print("Finished Loading Data")
+        model, history = train.Build_Train_CNN2D(trainImages, trainLabels, testImages, testLabels,
+                                                 epochs=TRAIN_EPOCHS, img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y,
+                                                 load_weights=True, checkpoint_to_load=checkpoint_file)
+        predictions = model.predict(testImages)
+
+    if stft_model_to_use == "ResNet":
+        checkpoint_file = "models/ResNet/cp-003"
+
+        trainImages, trainLabels, testImages, testLabels = loader.GenerateArrays_STFT(TRAIN_CSV, TEST_CSV, IMAGE_PATH,
+                                                                                      IMG_SIZE_X, IMG_SIZE_Y)
+        # Auf von (-1, px_x, px_y, 1) auf (-1, px_x, px_y, 3) Tensor erhöhen
+        trainImages = tf.repeat(trainImages, 3, axis=3)
+        testImages = tf.repeat(testImages, 3, axis=3)
+        print("Finished Loading Data")
+        model, history = train.Build_Train_ResNet50(trainImages, trainLabels, testImages, testLabels,
+                                                    epochs=TRAIN_EPOCHS, load_weights=True,
+                                                    checkpoint_to_load=checkpoint_file)
+        predictions = model.predict(testImages)
+
+    if stft_model_to_use == "own_ResNet":
+        checkpoint_file = "models/own_ResNet/cp-002"
+
+        trainImages, trainLabels, testImages, testLabels = loader.GenerateArrays_STFT(TRAIN_CSV, TEST_CSV, IMAGE_PATH,
+                                                                                      IMG_SIZE_X, IMG_SIZE_Y)
+        print("Finished Loading Data")
+
+        model, history = train.Build_Train_OwnResNet(trainImages, trainLabels, testImages, testLabels,
+                                                     epochs=TRAIN_EPOCHS, img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y,
+                                                     load_weights=True, checkpoint_to_load=checkpoint_file)
+        predictions = model.predict(testImages)
+
+    predictions = tf.argmax(predictions, axis=-1)
+    eva.write_predictions_to_csv(predictions, testLabels, fold=CURRENT_FOLD)
+

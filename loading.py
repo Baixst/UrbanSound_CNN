@@ -107,7 +107,7 @@ def GenerateLabelArray(dataframe):
     return arr
 
 
-def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y, zero_pad):
+def GenerateImageArray(dataframe, file_list, img_path, px_x, px_y, zero_pad=0):
     amount_files = len(dataframe.index)
     print("collecting data from " + str(amount_files) + " images")
 
