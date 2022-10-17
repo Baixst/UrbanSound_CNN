@@ -18,9 +18,9 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
     model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same'))
-    # model.add(keras.layers.GlobalAveragePooling2D())
+    model.add(keras.layers.MaxPooling2D((2, 2)))
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(256, activation='relu'))
+    model.add(keras.layers.Dense(512, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
 
     # COMPILE MODEL
@@ -28,6 +28,8 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
+
+    model.summary()
 
     # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
     checkpoint_path = checkpoint_to_load + "cp-{epoch:03d}"

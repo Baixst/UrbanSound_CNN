@@ -111,7 +111,7 @@ def plot_confusion_matrix(class_names, test_acc, predictions, true_labels):
     fig.suptitle(("Genauigkeit = " + str(round(test_acc, 3))), fontsize=13)
     plt.subplots_adjust(left=0.27, bottom=0.352, right=0.905, top=0.92, wspace=0.2, hspace=0.2)
     fig.savefig("results/ConfusionMatrix_Normal.png", bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
     # Same again but for balanced accuracy
     fig = plt.figure(figsize=(10, 8))
@@ -122,7 +122,7 @@ def plot_confusion_matrix(class_names, test_acc, predictions, true_labels):
     fig.suptitle(("Ausgewogene Genauigkeit = " + str(round(balanced_acc, 3))), fontsize=13)
     plt.subplots_adjust(left=0.27, bottom=0.352, right=0.905, top=0.92, wspace=0.2, hspace=0.2)
     fig.savefig("results/ConfusionMatrix_Balanced.png", bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
     return
 
@@ -245,7 +245,7 @@ def plot_accuracy_over_epochs(acc_arr, val_acc_arr, std_acc=None, std_val_acc=No
     plt.legend()
 
     fig.savefig("results/AccuracyPlot.png", bbox_inches='tight')
-    plt.show()
+    # plt.show()
     return
 
 
@@ -270,7 +270,7 @@ def plot_loss_over_epochs(loss_arr, val_loss_arr, std_loss=None, std_val_loss=No
     plt.legend()
 
     fig.savefig("results/LossPlot.png", bbox_inches='tight')
-    plt.show()
+    # plt.show()
     return
 
 

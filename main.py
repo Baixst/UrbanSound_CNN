@@ -29,13 +29,13 @@ if gpus:
 '''
 
 # Path Parameters
-AUDIO_PATH = "res/audio_3sec_duplicated_44khz"                             # not used for training, only for preprocessing tasks
+AUDIO_PATH = "res/audio_4sec_centered_44khz"                             # not used for training, only for preprocessing tasks
 IMAGE_PATH = "res/img_4sec_cen_224x224_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
 DWT_FEATURES_CSV = "res/dwt_features_V5_db1_less.csv"               # dwt features for training dense net
 CURRENT_FOLD = 1                                                # used for cross-val when each fold is run on it's own
-TRAIN_CSV = "metadata/Trainfiles.csv"
-TEST_CSV = "metadata/Testfiles.csv"                               # csv's for normal single training
+TRAIN_CSV = "metadata/def_folds/train" + str(CURRENT_FOLD) + ".csv"
+TEST_CSV = "metadata/def_folds/test" + str(CURRENT_FOLD) + ".csv"
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 CROSS_VAL_RESULTS = "results/crossVal_results.csv"          # contains acc + loss results for manual cross val
@@ -47,18 +47,18 @@ collect_dwt_data = False
 create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = False
+build_and_train_STFT = True
 stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
 build_and_train_DWT = False
 manual_evaluation = False
-predict_from_checkpoint = True
+predict_from_checkpoint = False
 model_to_eval = "default"         # "default", "ResNet", "own_ResNet", "dense_dwt" is possible
 
 # Preprocess Parameters
 SPECTROGRAM_TYPE = "mel"
 SPEC_FREQ_SCALE = "mel"
-FRAME_SIZE = 2048
-HOP_SIZE = 512
+FRAME_SIZE = 1024
+HOP_SIZE = 256
 MEL_BINS = 128
 CWT_FREQ_SCALES = 64
 CWT_WAVELET = "morl"
@@ -69,7 +69,7 @@ IMG_SIZE_X, IMG_SIZE_Y = 224, 224
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 50
+TRAIN_EPOCHS = 30
 
 # Evalutation Parameters
 USE_DEF_CROSS_VAL = False

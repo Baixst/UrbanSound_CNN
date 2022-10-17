@@ -366,7 +366,7 @@ def createDuplicatedWaveFiles(orginal_files, save_path, target_duration, sampler
     return
 
 
-# createCenteredWaveFiles("res/audio", "res/audio_3sec_centered_44khz", 3, 44100)
+createCenteredWaveFiles("res/audio", "res/audio_4sec_centered_44khz", 4, 44100)
 # createDuplicatedWaveFiles("res/audio", "res/audio_4sec_duplicated_44khz", 4, 44100)
 
 def GetSubtypeOf(filename):
@@ -503,4 +503,4 @@ results_csv = "results/crossVal_results.csv"
 predictions_csv = "results/crossVal_predictions.csv"
 
 
-eva.ManualCrossVal_Eval(class_names, results_csv, predictions_csv, 10)
+# eva.ManualCrossVal_Eval(class_names, results_csv, predictions_csv, 10)
