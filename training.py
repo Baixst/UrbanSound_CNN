@@ -24,13 +24,13 @@ def Build_Train_CNN2D(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Dense(10, activation='softmax'))
 
     # COMPILE MODEL
-    optimizer = keras.optimizers.Adam(learning_rate=0.0002)
+    optimizer = keras.optimizers.Adam(learning_rate=0.00002)
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
 
     # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
-    checkpoint_path = "models/default_cnn/cp-{epoch:03d}"
+    checkpoint_path = checkpoint_to_load + "cp-{epoch:03d}"
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path,
@@ -60,28 +60,28 @@ def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epoch
     print("TRAINING RESNET50")
 
     # Load ResNet and freeze all layers
-    base_model = keras.applications.ResNet50V2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+    base_model = keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
     for layer in base_model.layers:
         if 'BatchNormalization' not in layer.__class__.__name__:
             layer.trainable = False
 
     # add own dense layers for classification
     x = keras.layers.GlobalAveragePooling2D()(base_model.output)
-    # x = keras.layers.Dense(1000, activation='relu')(x)
+    # x = keras.layers.Dense(512, activation='relu')(x)
     predictions = keras.layers.Dense(10, activation='softmax')(x)
 
     head_model = keras.Model(inputs=base_model.input, outputs=predictions)
 
     # COMPILE MODEL
-    optimizer = keras.optimizers.Adam(learning_rate=0.001)
+    optimizer = keras.optimizers.Adam(learning_rate=0.0001)
     head_model.compile(optimizer=optimizer,
                        loss=keras.losses.sparse_categorical_crossentropy,
                        metrics=['accuracy'])
 
-    # head_model.summary()
+    head_model.summary()
 
     # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
-    checkpoint_path = "models/ResNet/cp-{epoch:03d}"
+    checkpoint_path = checkpoint_to_load + "cp-{epoch:03d}"
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path,
@@ -111,7 +111,6 @@ def Build_Train_OwnResNet(train_data, train_labels, test_data, test_labels, epoc
     print("TRAINING OWN RESNET")
 
     X_input = keras.layers.Input((img_size_x, img_size_y, 1))
-    # X = tf.keras.layers.ZeroPadding2D((3, 3))(X_input)
 
     # Step 2 (Initial Conv layer along with maxPool)
     X = tf.keras.layers.Conv2D(64, kernel_size=7, strides=2, padding='same')(X_input)
@@ -140,17 +139,16 @@ def Build_Train_OwnResNet(train_data, train_labels, test_data, test_labels, epoc
     # Step 4 End Dense Network
     X = keras.layers.GlobalAveragePooling2D()(X)
     X = tf.keras.layers.Dense(10, activation='softmax')(X)
-    # X = tf.keras.layers.Dense(256, activation='relu')(X)
     model = tf.keras.models.Model(inputs=X_input, outputs=X, name="OwnResNet")
 
     # COMPILE MODEL
-    optimizer = keras.optimizers.Adam(learning_rate=0.0005)
+    optimizer = keras.optimizers.Adam(learning_rate=0.00001)
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
 
     # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
-    checkpoint_path = "models/own_ResNet/cp-{epoch:03d}"
+    checkpoint_path = checkpoint_to_load + "cp-{epoch:03d}"
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path,
@@ -186,7 +184,7 @@ def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, 
     model.add(keras.layers.Dropout(0.2))
     model.add(keras.layers.Dense(60, activation='relu'))   # 60
     model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(35, activation='relu'))   # 30
+    model.add(keras.layers.Dense(30, activation='relu'))   # 30
     model.add(keras.layers.Dense(10, activation='softmax'))
 
     '''
@@ -209,7 +207,7 @@ def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, 
                   metrics=['accuracy'])
 
     # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
-    checkpoint_path = "models/dense_dwt/cp-{epoch:03d}"
+    checkpoint_path = checkpoint_to_load + "cp-{epoch:03d}"
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path,

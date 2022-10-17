@@ -30,15 +30,16 @@ if gpus:
 
 # Path Parameters
 AUDIO_PATH = "res/audio_3sec_duplicated_44khz"                             # not used for training, only for preprocessing tasks
-IMAGE_PATH = "res/test"
+IMAGE_PATH = "res/img_4sec_cen_224x224_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
 DWT_FEATURES_CSV = "res/dwt_features_V5_db1_less.csv"               # dwt features for training dense net
+CURRENT_FOLD = 1                                                # used for cross-val when each fold is run on it's own
 TRAIN_CSV = "metadata/Trainfiles.csv"
 TEST_CSV = "metadata/Testfiles.csv"                               # csv's for normal single training
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 CROSS_VAL_RESULTS = "results/crossVal_results.csv"          # contains acc + loss results for manual cross val
-CROSS_VAL_PREDICTIONS = "results/crossVal_predictions.csv"  # contains predictions + lables results for manual cross val
+CROSS_VAL_PREDICTIONS = "results/crossVal_predictions.csv"  # contains predictions + lables for manual cross val
 
 # Script Tasks
 create_spectrograms = False
@@ -47,11 +48,11 @@ create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
 build_and_train_STFT = False
-stft_model_to_use = "own_ResNet"         # "default", "ResNet", "own_ResNet" is possible
+stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
 build_and_train_DWT = False
 manual_evaluation = False
 predict_from_checkpoint = True
-model_to_eval = "own_ResNet"         # "default", "ResNet", "own_ResNet", "dense_dwt" is possible
+model_to_eval = "default"         # "default", "ResNet", "own_ResNet", "dense_dwt" is possible
 
 # Preprocess Parameters
 SPECTROGRAM_TYPE = "mel"
@@ -68,13 +69,13 @@ IMG_SIZE_X, IMG_SIZE_Y = 224, 224
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 3
+TRAIN_EPOCHS = 50
 
 # Evalutation Parameters
 USE_DEF_CROSS_VAL = False
 USE_RAND_CROSS_VAL = False
 CROSS_VAL_FOLDS = 4
-CURRENT_FOLD = 10        # used for cross-val when each fold is run on it's own
+
 
 CLASS_NAMES = ['Klimaanlage', 'Hupe', 'Kinder', 'Bellen', 'Bohren', 'Motor',
                'Schüsse', 'Presslufthammer', 'Sirenen', 'Straßenmusik']
@@ -229,18 +230,25 @@ if build_and_train_STFT:
         print("<--- TRAINING 1/1 ---")
         # Train Model
         if stft_model_to_use == "default":
+            checkpoint_path = "models/default_cnn/fold" + str(CURRENT_FOLD) + "/"
             model, history = train.Build_Train_CNN2D(trainImages, trainLabels, testImages, testLabels,
-                                                     epochs=TRAIN_EPOCHS, img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y)
+                                                     epochs=TRAIN_EPOCHS, img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y,
+                                                     checkpoint_to_load=checkpoint_path)
 
         if stft_model_to_use == "ResNet":
+            checkpoint_path = "models/ResNet/fold" + str(CURRENT_FOLD) + "/"
+
             # Auf von (-1, px_x, px_y, 1) auf (-1, px_x, px_y, 3) Tensor erhöhen
             trainImages = tf.repeat(trainImages, 3, axis=3)
             testImages = tf.repeat(testImages, 3, axis=3)
-            model, history = train.Build_Train_ResNet50(trainImages, trainLabels, testImages, testLabels, epochs=TRAIN_EPOCHS)
+            model, history = train.Build_Train_ResNet50(trainImages, trainLabels, testImages, testLabels,
+                                                        epochs=TRAIN_EPOCHS, checkpoint_to_load=checkpoint_path)
 
         if stft_model_to_use == "own_ResNet":
+            checkpoint_path = "models/own_ResNet/fold" + str(CURRENT_FOLD) + "/"
             model, history = train.Build_Train_OwnResNet(trainImages, trainLabels, testImages, testLabels,
-                                                    epochs=TRAIN_EPOCHS, img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y)
+                                                    epochs=TRAIN_EPOCHS, img_size_x=IMG_SIZE_X, img_size_y=IMG_SIZE_Y,
+                                                         checkpoint_to_load=checkpoint_path)
 
         histories = [history]
 
@@ -264,7 +272,7 @@ if build_and_train_DWT:
 
             # Build and train model
             model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
-                                                     amount_features=650)
+                                                     amount_features=150)
 
             # Collect evaluation data
             test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)
@@ -297,6 +305,7 @@ if build_and_train_DWT:
         print("Finished Loading Data")
 
         print("<--- TRAINING 1/1 ---")
+        checkpoint_path = "models/dense_dwt/fold" + str(CURRENT_FOLD) + "/"
         model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
                                              amount_features=150)
 
@@ -314,7 +323,7 @@ if manual_evaluation:
 
 if predict_from_checkpoint:
     if model_to_eval == "dense_dwt":
-        checkpoint_file = "models/dense_dwt/cp-005"
+        checkpoint_file = "models/dense_dwt/fold" + str(CURRENT_FOLD) + "/cp-005"
 
         trainFeat, trainLabels, testFeat, testLabels = loader.GenerateArrays_DWT(TRAIN_CSV, TEST_CSV, DWT_FEATURES_CSV)
         print("Finished Loading Data")
@@ -324,7 +333,7 @@ if predict_from_checkpoint:
         predictions = model.predict(testFeat)
 
     if stft_model_to_use == "default":
-        checkpoint_file = "models/default_cnn/cp-004"
+        checkpoint_file = "models/default_cnn/fold" + str(CURRENT_FOLD) + "/cp-014"
 
         trainImages, trainLabels, testImages, testLabels = loader.GenerateArrays_STFT(TRAIN_CSV, TEST_CSV, IMAGE_PATH,
                                                                                       IMG_SIZE_X, IMG_SIZE_Y)
@@ -335,7 +344,7 @@ if predict_from_checkpoint:
         predictions = model.predict(testImages)
 
     if stft_model_to_use == "ResNet":
-        checkpoint_file = "models/ResNet/cp-003"
+        checkpoint_file = "models/ResNet/fold" + str(CURRENT_FOLD) + "/cp-005"
 
         trainImages, trainLabels, testImages, testLabels = loader.GenerateArrays_STFT(TRAIN_CSV, TEST_CSV, IMAGE_PATH,
                                                                                       IMG_SIZE_X, IMG_SIZE_Y)
@@ -349,7 +358,7 @@ if predict_from_checkpoint:
         predictions = model.predict(testImages)
 
     if stft_model_to_use == "own_ResNet":
-        checkpoint_file = "models/own_ResNet/cp-002"
+        checkpoint_file = "models/own_ResNet/fold" + str(CURRENT_FOLD) + "/cp-005"
 
         trainImages, trainLabels, testImages, testLabels = loader.GenerateArrays_STFT(TRAIN_CSV, TEST_CSV, IMAGE_PATH,
                                                                                       IMG_SIZE_X, IMG_SIZE_Y)

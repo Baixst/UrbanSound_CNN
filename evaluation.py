@@ -9,7 +9,7 @@ import utils
 def prediction_accuracy(predictions, true_labels):
 
     if len(predictions) != len(true_labels):
-        print("Predictions array not same lenght as True_labels array. Something went wrong here.")
+        print("Predictions array not same length as True_labels array. Something went wrong here.")
         return
 
     correct_predictions = 0
