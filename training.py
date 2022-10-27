@@ -69,13 +69,13 @@ def Build_Train_ResNet50(train_data, train_labels, test_data, test_labels, epoch
 
     # add own dense layers for classification
     x = keras.layers.GlobalAveragePooling2D()(base_model.output)
-    # x = keras.layers.Dense(512, activation='relu')(x)
+    x = keras.layers.Dense(512, activation='relu')(x)
     predictions = keras.layers.Dense(10, activation='softmax')(x)
 
     head_model = keras.Model(inputs=base_model.input, outputs=predictions)
 
     # COMPILE MODEL
-    optimizer = keras.optimizers.Adam(learning_rate=0.0001)
+    optimizer = keras.optimizers.Adam(learning_rate=0.00005)
     head_model.compile(optimizer=optimizer,
                        loss=keras.losses.sparse_categorical_crossentropy,
                        metrics=['accuracy'])
@@ -146,7 +146,7 @@ def Build_Train_OwnResNet(train_data, train_labels, test_data, test_labels, epoc
     # COMPILE MODEL
     optimizer = keras.optimizers.Adam(learning_rate=0.00001)
     model.compile(optimizer=optimizer,
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(),
                   metrics=['accuracy'])
 
     model.summary()
