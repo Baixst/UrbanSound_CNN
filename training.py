@@ -149,6 +149,8 @@ def Build_Train_OwnResNet(train_data, train_labels, test_data, test_labels, epoc
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
 
+    model.summary()
+
     # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
     checkpoint_path = checkpoint_to_load + "cp-{epoch:03d}"
 
@@ -179,34 +181,36 @@ def Build_Train_Dense(train_data, train_labels, test_data, test_labels, epochs, 
                       checkpoint_to_load="models/dense_dwt/"):
     # CREATE MODEL CNN ARCHITECTURE
 
+    '''
     # Model for coeffs without segmentation
     model = keras.Sequential()
     model.add(keras.layers.Dense(amount_features, activation='sigmoid', input_shape=(amount_features,)))
-    model.add(keras.layers.Dense(120, activation='relu'))  # 120 für V1
+    model.add(keras.layers.Dense(120, activation='relu'))
     model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(60, activation='relu'))   # 60
+    model.add(keras.layers.Dense(60, activation='relu'))
     model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(30, activation='relu'))   # 30
+    model.add(keras.layers.Dense(30, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
-
     '''
+
     model = keras.Sequential()
     model.add(keras.layers.Dense(amount_features, activation='sigmoid', input_shape=(amount_features,)))
-    model.add(keras.layers.Dense(700, activation='relu'))  # 150    0,511
-    model.add(keras.layers.Dense(350, activation='relu'))  # nicht vorhanden
+    model.add(keras.layers.Dense(520, activation='relu'))
+    model.add(keras.layers.Dense(260, activation='relu'))
     model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(150, activation='relu'))   # 80
-    model.add(keras.layers.Dense(75, activation='relu'))  # nicht vorhanden
+    model.add(keras.layers.Dense(130, activation='relu'))
+    model.add(keras.layers.Dense(60, activation='relu'))
     model.add(keras.layers.Dropout(0.2))
-    model.add(keras.layers.Dense(30, activation='relu'))   # 30
+    model.add(keras.layers.Dense(30, activation='relu'))
     model.add(keras.layers.Dense(10, activation='softmax'))
-    '''
 
     # COMPILE MODEL
-    optimizer = keras.optimizers.Adam(learning_rate=0.0002)
+    optimizer = keras.optimizers.Adam(learning_rate=0.0004)
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),  # austauschen z.b hinge loss
                   metrics=['accuracy'])
+
+    model.summary()
 
     # SETUP CHECKPOINT TO SAVE WEIGHTS FROM BEST EPOCH
     checkpoint_path = checkpoint_to_load + "cp-{epoch:03d}"
@@ -267,6 +271,7 @@ def res_conv_block(X, filter_amount):
 
     # Processing Residue with conv(1,1)
     X_skip = tf.keras.layers.Conv2D(filter_amount, (1, 1), strides=(2, 2))(X_skip)
+    X_skip = keras.layers.BatchNormalization(axis=3)(X_skip)
 
     # Add Residue and use relu afterwards
     X = tf.keras.layers.Add()([X, X_skip])

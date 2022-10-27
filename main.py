@@ -29,13 +29,13 @@ if gpus:
 '''
 
 # Path Parameters
-AUDIO_PATH = "res/audio_4sec_centered_44khz"                             # not used for training, only for preprocessing tasks
+AUDIO_PATH = "res/audio_3sec_duplicated_44khz"                             # not used for training, only for preprocessing tasks
 IMAGE_PATH = "res/img_4sec_cen_224x224_44khz"
 METADATA_CSV = "metadata/UrbanSound8K.csv"                                 # main metadata csv from UrbandSound8K
-DWT_FEATURES_CSV = "res/dwt_features_V5_db1_less.csv"               # dwt features for training dense net
-CURRENT_FOLD = 1                                                # used for cross-val when each fold is run on it's own
-TRAIN_CSV = "metadata/def_folds/train" + str(CURRENT_FOLD) + ".csv"
-TEST_CSV = "metadata/def_folds/test" + str(CURRENT_FOLD) + ".csv"
+DWT_FEATURES_CSV = "res/dwt_features_V5_db1.csv"               # dwt features for training dense net
+CURRENT_FOLD = 10                                                # used for cross-val when each fold is run on it's own
+TRAIN_CSV = "metadata/Trainfiles.csv"
+TEST_CSV = "metadata/Testfiles.csv"
 CROSS_VAL_RANDOM_CSV = "metadata/RandomCrossVal.csv"                    # path of csv used for random cross validation
 DEF_FOLDS_PATH = "metadata/def_folds"                                   # path of csv's contain predefined fold infos
 CROSS_VAL_RESULTS = "results/crossVal_results.csv"          # contains acc + loss results for manual cross val
@@ -47,12 +47,12 @@ collect_dwt_data = False
 create_cwt_scalograms = False
 split_data = False
 create_cross_val_csv = False
-build_and_train_STFT = True
-stft_model_to_use = "default"         # "default", "ResNet", "own_ResNet" is possible
-build_and_train_DWT = False
+build_and_train_STFT = False
+stft_model_to_use = "ResNet"         # "default", "ResNet", "own_ResNet" is possible
+build_and_train_DWT = True
 manual_evaluation = False
 predict_from_checkpoint = False
-model_to_eval = "default"         # "default", "ResNet", "own_ResNet", "dense_dwt" is possible
+model_to_eval = "dense_dwt"         # "default", "ResNet", "own_ResNet", "dense_dwt" is possible
 
 # Preprocess Parameters
 SPECTROGRAM_TYPE = "mel"
@@ -69,10 +69,10 @@ IMG_SIZE_X, IMG_SIZE_Y = 224, 224
 MY_DPI = 77  # weirdly not working with the actual dpi of the monitor, just play around with this value until it works
 
 # Training Parameters
-TRAIN_EPOCHS = 30
+TRAIN_EPOCHS = 200
 
 # Evalutation Parameters
-USE_DEF_CROSS_VAL = False
+USE_DEF_CROSS_VAL = True
 USE_RAND_CROSS_VAL = False
 CROSS_VAL_FOLDS = 4
 
@@ -90,7 +90,7 @@ if create_spectrograms:
 
 # use Wavelet Transform
 if collect_dwt_data:
-    pp.dwt_feature_extraction_V5(AUDIO_PATH, DWT_FEATURES_CSV, 44100, wavelet=DWT_WAVELET)
+    pp.dwt_feature_extraction_V6(AUDIO_PATH, DWT_FEATURES_CSV, 44100, wavelet=DWT_WAVELET)
 if create_cwt_scalograms:
     pp.CreateCWTScaleograms(AUDIO_PATH, IMAGE_PATH, freq_scales=CWT_FREQ_SCALES, wavelet=CWT_WAVELET,
                             px_x=IMG_SIZE_X, px_y=IMG_SIZE_Y, monitor_dpi=MY_DPI, fill_mode="centered")
@@ -305,9 +305,9 @@ if build_and_train_DWT:
         print("Finished Loading Data")
 
         print("<--- TRAINING 1/1 ---")
-        checkpoint_path = "models/dense_dwt/fold" + str(CURRENT_FOLD) + "/"
+        checkpoint_path = "models/dense_dwt650/fold" + str(CURRENT_FOLD) + "/"
         model, history = train.Build_Train_Dense(trainFeat, trainLabels, testFeat, testLabels, epochs=TRAIN_EPOCHS,
-                                             amount_features=150)
+                                             amount_features=650, checkpoint_to_load=checkpoint_path)
 
         histories = [history]
 
@@ -317,9 +317,6 @@ if build_and_train_DWT:
         print("---------------------------- \nEvaluation of Model:")
         test_loss, test_acc = model.evaluate(testFeat, testLabels, verbose=2)
         eva.Show_Confusion_Matrix(CLASS_NAMES, model, test_acc, testFeat, testLabels, CURRENT_FOLD)
-
-if manual_evaluation:
-    eva.ManualCrossVal_Eval(CLASS_NAMES, CROSS_VAL_RESULTS, CROSS_VAL_PREDICTIONS, 10)
 
 if predict_from_checkpoint:
     if model_to_eval == "dense_dwt":
@@ -372,3 +369,6 @@ if predict_from_checkpoint:
     predictions = tf.argmax(predictions, axis=-1)
     eva.write_predictions_to_csv(predictions, testLabels, fold=CURRENT_FOLD)
 
+
+if manual_evaluation:
+    eva.ManualCrossVal_Eval(CLASS_NAMES, CROSS_VAL_RESULTS, CROSS_VAL_PREDICTIONS, 10)

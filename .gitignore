@@ -168,3 +168,5 @@ cython_debug/
 #.idea/dictionaries/Student.xml
 #.idea/misc.xml
 #.idea/UrbanSound_CNN.iml
+.idea/UrbanSound_CNN.iml
+.idea/misc.xml

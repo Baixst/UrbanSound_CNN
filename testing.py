@@ -1,5 +1,7 @@
 import os
 import csv
+import statistics
+
 import pandas as pd
 import random
 import pydub
@@ -366,7 +368,7 @@ def createDuplicatedWaveFiles(orginal_files, save_path, target_duration, sampler
     return
 
 
-createCenteredWaveFiles("res/audio", "res/audio_4sec_centered_44khz", 4, 44100)
+# createCenteredWaveFiles("res/audio", "res/audio_4sec_centered_44khz", 4, 44100)
 # createDuplicatedWaveFiles("res/audio", "res/audio_4sec_duplicated_44khz", 4, 44100)
 
 def GetSubtypeOf(filename):
@@ -504,3 +506,5 @@ predictions_csv = "results/crossVal_predictions.csv"
 
 
 # eva.ManualCrossVal_Eval(class_names, results_csv, predictions_csv, 10)
+
+# preprocess.CreateCWTScaleograms("cwt_plotting1/", "cwt_plotting2/", 64, "morl", 224, 224, 77, "duplicate")

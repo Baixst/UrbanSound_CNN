@@ -269,7 +269,7 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\res\dwt_features_V5.csv">
+        <entry key="\res\dwt_features_test.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
@@ -284,6 +284,13 @@
           </value>
         </entry>
         <entry key="\results\crossVal_results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\results\dense_dwt650\crossVal_results_dwt650.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
