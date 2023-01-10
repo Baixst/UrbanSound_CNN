@@ -1,6 +1,6 @@
 # UrbanSound_CNN
 
-Python Projekt für Masterarbeit (Klassifizierung von Audiodaten mit CNNs)
+Python Projekt für Masterarbeit "Klassifizierung urbaner Geräusche mit Wavelet-Transformation und residualen Faltungsnetzen
 
 ## Wichtig
 In root directory den Ordner "res/" anlegen. Darin sollten sich die Audio oder Bilddaten
